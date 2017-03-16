@@ -58,9 +58,91 @@ v0.1.21	 | Added in: v0.1.21
 - expected <any> 期望值
 - message <any> 消息提示
 
+`assert.deepEqual(actual, expected[, message])` 测试实际值与期望值之间的深度相等，原始值的使用(==)运算符进行比较。
 
+只考虑可枚举的自身属性。对于对象原型,attached symbols,以及非枚举属性，可能会产生意想不到的结果。
 
+例如：以下的示例并不会抛出断言错误，因为Error对象属性是不可枚举的。
+```
+// WARNING: This does not throw an AssertionError!
+assert.deepEqual(Error('a'), Error('b'));
+```
 
+深度相等意味着子对象的自身可枚举属性也会考虑在内。
+```
+const assert = require('assert');
 
+const obj1 = {
+  a : {
+    b : 1
+  }
+};
+const obj2 = {
+  a : {
+    b : 2
+  }
+};
+const obj3 = {
+  a : {
+    b : 1
+  }
+};
+const obj4 = Object.create(obj1);  
+//obj1是obj4的原型，因此obj4={},
+//但是：console.log(obj4.__proto__==obj1) //true
+
+assert.deepEqual(obj1, obj1);
+// OK, object is equal to itself
+
+assert.deepEqual(obj1, obj2);
+// AssertionError: { a: { b: 1 } } deepEqual { a: { b: 2 } }
+// values of b are different
+
+assert.deepEqual(obj1, obj3);
+// OK, objects are equal
+
+assert.deepEqual(obj1, obj4);
+// AssertionError: { a: { b: 1 } } deepEqual {}
+// Prototypes are ignored
+```
+
+# assert.deepStrictEqual(actual, expected[, message])
+
+总体来说，和`assert.deepEqual()`用法相同，但有两点例外，不一样：
+### 1. 原始值使用严格相对运算符（===）进行比较
+### 2. 如果是对象比较，对象的属性也会进行严格比较。
+
+```
+const assert = require('assert');
+
+assert.deepEqual({a:1}, {a:'1'});
+// OK, because 1 == '1'
+
+assert.deepStrictEqual({a:1}, {a:'1'});
+// AssertionError: { a: 1 } deepStrictEqual { a: '1' }
+// because 1 !== '1' using strict equality
+```
+
+# assert.doesNotThrow(block[, error][, message])
+
+# assert.equal(actual, expected[, message])
+
+# assert.fail(actual, expected, message, operator)
+
+# assert.ifError(value)
+
+# assert.notDeepEqual(actual, expected[, message])
+
+# assert.notDeepStrictEqual(actual, expected[, message])
+
+# assert.notEqual(actual, expected[, message])
+
+# assert.notStrictEqual(actual, expected[, message])
+
+# assert.ok(value[, message])
+
+# assert.strictEqual(actual, expected[, message])
+
+# assert.throws(block[, error][, message])
 
 

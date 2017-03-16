@@ -31,4 +31,4 @@ assert.deepEqual(obj1, obj3);
 
 assert.deepEqual(obj1, obj4);
 // AssertionError: { a: { b: 1 } } deepEqual {}
-// Prototypes are ignored
+// Prototypes are ignored 
