@@ -61,6 +61,124 @@ HTTP 消息头表现为一个对象字面量，如下：
 这样就省去了每次发起http请求是创建套接字的时间提高了效率。
 -- 引用自：http://linmomo02.iteye.com/blog/1415695
 
+
+# http.METHODS
+
+解析器支持的 HTTP 方法列表,返回:`Array`。
+```
+var http=require('http');
+console.log(http.METHODS);
+
+/*** 返回：
+[ 'ACL',
+  'BIND',
+  'CHECKOUT',
+  'CONNECT',
+  'COPY',
+  'DELETE',
+  'GET',
+  'HEAD',
+  'LINK',
+  'LOCK',
+  'M-SEARCH',
+  'MERGE',
+  'MKACTIVITY',
+  'MKCALENDAR',
+  'MKCOL',
+  'MOVE',
+  'NOTIFY',
+  'OPTIONS',
+  'PATCH',
+  'POST',
+  'PROPFIND',
+  'PROPPATCH',
+  'PURGE',
+  'PUT',
+  'REBIND',
+  'REPORT',
+  'SEARCH',
+  'SUBSCRIBE',
+  'TRACE',
+  'UNBIND',
+  'UNLINK',
+  'UNLOCK',
+  'UNSUBSCRIBE' ]
+  */
+```
+
+
+# http.STATUS_CODES
+
+所有标准的http 响应状态码集合（`Object`）,以及每个状态码的简短描述，例如：
+`http.STATUS_CODES[404] === 'Not Found'`
+
+# http.createServer([requestListener])
+
+requestListener参数：Function，自动添加到request事件。
+返回：http.Server的实例。
+
+# http.get(options[, callback])
+
+### http.request(options[, callback]), method 为get 时的便捷写法。
+
+options: ` <Object> | <string> ` ,接收和http.request相同的options选项属性。只是method属性总是设置为get.
+
+返回：返回的是http.ClientRequest类的实例. 如果是从原型继承的属性会被忽略。
+
+callback参数：`<Function>` ,callback函数只有一个参数(`res`)，它是 http.IncomingMessage 的一个实例。
+
+>因为大多数请求都是 GET 请求且不带主体，所以 Node.js 提供了这个便捷的方法。 该方法与 http.request() 唯一的区别是它设置请求方法为 GET 且自动调用 req.end()。 注意，响应数据必须在回调中被消耗，具体原因详见 http.ClientRequest 章节。
+
+
+通过`http.get`获取 JSON的示例：
+
+```
+http.get('http://nodejs.org/dist/index.json', (res) => {
+  const { statusCode } = res;
+  const contentType = res.headers['content-type'];
+
+  let error;
+  if (statusCode !== 200) {
+    error = new Error(`Request Failed.\n` +
+                      `Status Code: ${statusCode}`);
+  } else if (!/^application\/json/.test(contentType)) {
+    error = new Error(`Invalid content-type.\n` +
+                      `Expected application/json but received ${contentType}`);
+  }
+  if (error) {
+    console.error(error.message);
+    // consume response data to free up memory
+    res.resume();
+    return;
+  }
+
+  res.setEncoding('utf8');
+  let rawData = '';
+  res.on('data', (chunk) => { rawData += chunk; });
+  res.on('end', () => {
+    try {
+      const parsedData = JSON.parse(rawData);
+      console.log(parsedData);
+    } catch (e) {
+      console.error(e.message);
+    }
+  });
+}).on('error', (e) => {
+  console.error(`Got error: ${e.message}`);
+});
+```
+
+
+
+
+
+
+
+# http.globalAgent
+
+Agent 的全局实例，作为所有 HTTP 客户端请求的默认 Agent。
+
+
 # http.request(options[, callback]) 
 
 ```Returns:<http.ClientRequest>```
@@ -127,3 +245,13 @@ req.on('error', (e) => {
 req.write(postData);
 req.end();
 ```
+
+请注意：示例中使用了 req.end()方法。 规则是：当使用http.request()方法时，不论是否有数据写入(request body)，都应该显式的调用req.end()方法。
+
+当进行request时，如果发生错误（如DNS解析，TCP错误，HTTP解析错误），会触发`error`事件。如果`error`事件没有注册监听函数，也会抛出错误。
+
+>有一些关于特定headers的注意事项：
+- 发送 `Connection: keep-alive` 头，通知nodejs 服务器保持持久化连接，直到下一个请求。
+- 发送`Content-Length`头，使默认的chunked编码失效。
+- 发送`Expect`头,请求头会立即发送。 通常，当发送 `Expect: 100-continue` 时，应该设置一个超时并监听 'continue' 事件。 详见 RFC2616 章节 8.2.3。
+- 发送一个 `Authorization` 头,会使用 auth 选项覆盖计算基本身份验证。
