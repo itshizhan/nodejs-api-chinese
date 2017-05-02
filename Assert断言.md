@@ -69,7 +69,8 @@ assert.deepEqual(Error('a'), Error('b'));
 ```
 
 深度相等意味着子对象的自身可枚举属性也会考虑在内。
-```
+
+```js
 const assert = require('assert');
 
 const obj1 = {
@@ -112,7 +113,7 @@ assert.deepEqual(obj1, obj4);
 ### 1. 原始值使用严格相对运算符（===）进行比较
 ### 2. 如果是对象比较，对象的属性也会进行严格比较。
 
-```
+```js
 const assert = require('assert');
 
 assert.deepEqual({a:1}, {a:'1'});

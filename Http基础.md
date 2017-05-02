@@ -8,7 +8,7 @@ node.js中HTTP接口的设计，支持很多传统很难处理的协议特性。
 
 HTTP 消息头表现为一个对象字面量，如下：
 
-```
+```js
 {     
   'content-length': '123',
   'content-type': 'text/plain',
@@ -29,7 +29,7 @@ HTTP 消息头表现为一个对象字面量，如下：
 
 例如，之前的头消息可能有一个下面的rawHeaders属性：
 
-```
+```js
 [ 
   'ConTent-Length', '123456',
   'content-LENGTH', '123',
@@ -65,7 +65,7 @@ HTTP 消息头表现为一个对象字面量，如下：
 # http.METHODS
 
 解析器支持的 HTTP 方法列表,返回:`Array`。
-```
+```js
 var http=require('http');
 console.log(http.METHODS);
 
@@ -132,7 +132,7 @@ callback参数：`<Function>` ,callback函数只有一个参数(`res`)，它是 
 
 通过`http.get`获取 JSON的示例：
 
-```
+```js
 http.get('http://nodejs.org/dist/index.json', (res) => {
   const { statusCode } = res;
   const contentType = res.headers['content-type'];
@@ -171,7 +171,7 @@ http.get('http://nodejs.org/dist/index.json', (res) => {
 >译者添加
 如需要将上述get请求的json 输出到浏览器，改进代码如下：
 
-```
+```js
 var  http=require('http');
 
 var proxy = http.createServer( (req, res1) => {
@@ -237,7 +237,7 @@ callback参数：Function,作为response 事件的监听器函数进行添加。
 
 `http.request(options[, callback]) `使用示例：
 
-```
+```js
 const postData = querystring.stringify({
   'msg': 'Hello World!'
 });
