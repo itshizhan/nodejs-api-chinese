@@ -81,3 +81,66 @@ server.listen(8000);
 服务器关闭时触发。
 
 ### Event: 'connect'
+
+- request：<http.IncomingMessage> HTTP 请求参数，同 'request' 事件。
+- socket： <net.Socket> 服务器与客户端之间的网络 socket。
+- head： <Buffer> 流的第一个数据包，可能为空。
+
+每当客户端发送 HTTP CONNECT 请求时触发。 如果此事件未被监听，则发送 CONNECT 请求的客户端会关闭连接。
+
+当此事件被触发后，请求的 socket 上是没有 'data' 监听器的，这意味着你需要绑定 'data' 事件监听器，用来处理 socket 上发送到服务器的数据。
+
+### Event: 'connection'
+
+- socket ：<net.Socket> 上的事件
+
+每当一个新的TCP流建立时，触发此事件。socket 是一个 net.Socket类型的对象。通常来说，用户不需要访问此事件。特别是，socket 并不会触发可读流（readable）事件，因为协议解析器绑定到到socket。 socket 可以通过 request.connection 访问。
+
+
+### Event: 'request'
+
+- request <http.IncomingMessage>
+- response <http.ServerResponse>
+
+每次请求时触发。注意：request 与connection 不是一个概念。 每次连接可能有多个请求。（例如，当保存keep-alive连接时）。
+
+### Event: 'upgrade'
+
+
+
+### server.maxHeadersCount
+
+- <number> 默认是 2000.
+
+允许请求头的最大数量。默认是2000，如果设置为0，则没有限制。
+
+### server.setTimeout([msecs][, callback])
+
+- msecs <Number>
+- callback <Function>
+
+设置socket的超时时间，及超时后的回调。
+
+如果超时发生，则触发服务器对象的 'timeout' 事件，并传入 socket 作为一个参数。
+
+如果服务器对象上设置了`timeout`事件监听，此监听将会携带超时socket参数调用。
+
+默认情况下，服务器超时时间是2分钟，如果超时了，sockets将会自动销毁。然而，如果为服务器的`timeout`指定了监听器，你需要显式的处理超时。
+
+
+
+返回：server
+
+### server.timeout
+
+- <number> 默认是：120000 毫秒(2分钟).
+
+socket 被认为超时时的空闲毫秒数。
+
+注意：此值的计算逻辑是建立在连接的基础上的。 因此，改变此值，并不会影响已经存在的连接，只会影响新建的连接。
+
+当设置为0时，将使所有自动超时行为失效。
+
+
+
+
