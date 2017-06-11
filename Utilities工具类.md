@@ -18,7 +18,135 @@ const util = require('util');
 
 # util.inherits(constructor, superConstructor)
 
+注意：
+
+`util.inherits()`方法已经不推荐使用了。请使用ES6的class 和extends 关键字获得语言层面的继承支持。同时注意，这两种方式在语法上是不兼容的。
+
+- constructor: 需要继承的构造函数
+- superConstructor： 被继承的构造函数
+
+方法的功能：通过原型prototype实现继承。 即将constructor 的原型设置为superConstructor对象。
+为了方便使用：superConstructor 可以通过 `constructor.super_` 进行访问。
+
+实际上，`util.inherits()`的内容部实现原理很简单:
+
+```js
+exports.inherits = function(ctor, superCtor) {
+  ctor.super_ = superCtor; 
+  Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
+};
+```
+通过源码，可知`util.inherits()` 只能继承原型上的属性和方法。
+
+示例如下：
+
+```js
+const util = require('util');
+const EventEmitter = require('events');
+
+// 本身继承
+function MyStream() {
+  EventEmitter.call(this);
+}
+
+// 继承原型上的
+util.inherits(MyStream, EventEmitter);
+
+MyStream.prototype.write = function(data) {
+  this.emit('data', data);
+};
+
+const stream = new MyStream();
+
+console.log(stream instanceof EventEmitter); // true
+console.log(MyStream.super_ === EventEmitter); // true
+
+stream.on('data', (data) => {
+  console.log(`Received data: "${data}"`);
+});
+stream.write('It works!'); // Received data: "It works!"
+```
+
+#### 使用 ES6 class and extends 的简洁版本：
+
+```js
+const EventEmitter = require('events');
+
+class MyStream extends EventEmitter {
+  write(data) {
+    this.emit('data', data);
+  }
+}
+
+const stream = new MyStream();
+
+stream.on('data', (data) => {
+  console.log(`Received data: "${data}"`);
+});
+stream.write('With ES6');
+
+```
+
 # util.inspect(object[, options])
+
+先看示例：
+
+```js
+const util = require('util');
+console.log(util.inspect(util.inspect, { showHidden: true, depth: null }));
+
+//输出如下:
+/*
+{ [Function: inspect]
+  [length]: 2,
+  [name]: 'inspect',
+  [prototype]: inspect { [constructor]: [Circular] },
+  [defaultOptions]: [Getter/Setter],
+  colors:
+   { bold: [ 1, 22, [length]: 2 ],
+     italic: [ 3, 23, [length]: 2 ],
+     underline: [ 4, 24, [length]: 2 ],
+     inverse: [ 7, 27, [length]: 2 ],
+     white: [ 37, 39, [length]: 2 ],
+     grey: [ 90, 39, [length]: 2 ],
+     black: [ 30, 39, [length]: 2 ],
+     blue: [ 34, 39, [length]: 2 ],
+     cyan: [ 36, 39, [length]: 2 ],
+     green: [ 32, 39, [length]: 2 ],
+     magenta: [ 35, 39, [length]: 2 ],
+     red: [ 31, 39, [length]: 2 ],
+     yellow: [ 33, 39, [length]: 2 ] },
+  styles:
+   { special: 'cyan',
+     number: 'yellow',
+     boolean: 'yellow',
+     undefined: 'grey',
+     null: 'bold',
+     string: 'green',
+     symbol: 'green',
+     date: 'magenta',
+     regexp: 'red' },
+  custom: Symbol(util.inspect.custom) }
+
+  */
+```
+
+从以上示例可知，`util.inspect()` 方法是返回对象的字符串表现形式(有点类似JSON.stringify()), 这对于debugging 调试时是非常有用的。传入的options选项可以改变格式化字符串的某些方面。
+
+- `object`:任何javascript字面量或Object
+- `options`: <Object> 可选，选项如下
+
+  - `showHidden` <boolean> If true, the object's non-enumerable symbols and properties will be included in the formatted result. Defaults to false.
+  - `depth` <number> Specifies the number of times to recurse while formatting the object. This is useful for inspecting large complicated objects. Defaults to 2. To make it recurse indefinitely pass null.
+  - `colors` <boolean> If true, the output will be styled with ANSI color codes. Defaults to false. Colors are customizable, see Customizing util.inspect colors.
+  - `customInspect` <boolean> If false, then custom inspect(depth, opts) functions exported on the object being inspected will not be called. Defaults to true.
+  - `showProxy` <boolean> If true, then objects and functions that are Proxy objects will be introspected to show their target and handler objects. Defaults to false.
+  - `maxArrayLength` <number> Specifies the maximum number of array and TypedArray elements to include when formatting. Defaults to 100. Set to null to show all array elements. Set to 0 or negative to show no array elements.
+  - `breakLength` <number> The length at which an object's keys are split across multiple lines. Set to Infinity to format an object as a single line. Defaults to 60 for legacy compatibility.
+
+
+
+
 
 # util.promisify(original)
 - original <Function>
