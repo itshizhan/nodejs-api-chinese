@@ -17,3 +17,8 @@
 
 6. [HTTP之http.ServerResponse类](https://github.com/leeson8888/nodejs-api-chinese/blob/master/Http.md)
 
+
+7. [Utilities工具类](https://github.com/leeson8888/nodejs-api-chinese/blob/master/Utilities%E5%B7%A5%E5%85%B7%E7%B1%BB.md)
+
+
+

@@ -85,7 +85,7 @@ callStat();
 ```
 
 
-### 如果当前存在`original[util.promisify.custom]`属性，`promisify` 将会返回其值，参看：` Custom promisified functions`
+#### 如果当前存在`original[util.promisify.custom]`属性，`promisify` 将会返回其值，参看：` Custom promisified functions`
 
 
 `promisify()` 方法是假定 `original`是一个函数，并且最后一个参数是一个回调函数。否则返回的函数将会导致一些未定义的行为。
