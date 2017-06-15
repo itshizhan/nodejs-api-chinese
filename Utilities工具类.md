@@ -60,8 +60,6 @@ exports.puts = util.deprecate(function() {
 // 执行puts(),输出：(node:17018) DeprecationWarning: util.puts: 使用 console.log 代替
 
 ```
-When called, util.deprecate() will return a function that will emit a DeprecationWarning using the process.on('warning') event. By default, this warning will be emitted and printed to stderr exactly once, the first time it is called. After the warning is emitted, the wrapped function is called.
-
 
 
 当被调用时，`util.deprecate() ` 会返回一个函数，并使用`process.on('warning')`事件触发`DeprecationWarning`.
