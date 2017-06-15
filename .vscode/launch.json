@@ -1,0 +1,51 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    
+    {
+      "type": "extensionHost",
+      "request": "launch",
+      "name": "启动扩展",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceRoot}"
+      ],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceRoot}/out/**/*.js"
+      ],
+      "preLaunchTask": "npm"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Program",
+      "program": "${workspaceRoot}/app.js"
+    },
+  {
+    "type": "node",
+    "request": "launch",
+    "name": "Electron Main",
+    "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+    "windows": {
+      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
+    },
+    "program": "${workspaceRoot}/main.js",
+    "protocol": "legacy"
+  },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch Chrome against localhost",
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceRoot}"
+    },
+    {
+      "type": "chrome",
+      "request": "attach",
+      "name": "Attach to Chrome",
+      "port": 9222,
+      "webRoot": "${workspaceRoot}"
+    }
+  ]
+}

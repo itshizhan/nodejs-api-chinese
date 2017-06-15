@@ -18,7 +18,7 @@
 6. [HTTP之http.ServerResponse类](https://github.com/leeson8888/nodejs-api-chinese/blob/master/Http.md)
 
 
-7. [Utilities工具类](https://github.com/leeson8888/nodejs-api-chinese/blob/master/Utilities%E5%B7%A5%E5%85%B7%E7%B1%BB.md)
+7. [Utilities工具类 ](https://github.com/leeson8888/nodejs-api-chinese/blob/master/Utilities%E5%B7%A5%E5%85%B7%E7%B1%BB.md) <img class="badge" src="https://img.shields.io/badge/%E5%B7%B2%E5%AE%8C%E6%88%90-100%25-brightgreen.svg">
 
 
 

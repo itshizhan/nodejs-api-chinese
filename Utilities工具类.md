@@ -12,9 +12,114 @@ const util = require('util');
 
 # util.debuglog(section)
 
+- `section <string>` 字符串，指定为应用的哪些部分创建日志函数。
+- `Returns: <Function>` 返回日志函数
+
+
+`util.debuglog()`方法用于创建一个函数，并根据条件向已经配置`NODE_DEBUG `环境变量的`stderr`写入debug消息。如果传入的参数名section出现在环境变量中，则返回类似
+`console.error()`操作的函数。 否则，没有任何输出。
+
+例如：
+
+```js
+// deubuglog.js
+const util = require('util');
+const debuglog = util.debuglog('foo');
+
+debuglog('hello from foo [%d]', 123);
+```
+
+直接运行文件:node deubuglog.js, 没有任何输出
+
+NODE_DEBUG=foo node debuglog.js 运行，则输出
+
+`FOO 17002: hello from foo [123]`
+
+17002 为进程id。
+
+可以通过逗号分隔的方式设置多个环境变量，例如 `NODE_DEBUG=fs,net,tls`
+
+
+
+
 # util.deprecate(function, string)
 
+`util.deprecate()` 方法，第一个参数为一个函数或class，并标记其为废弃的。第二个参数是字符串，提示信息。例如：
+
+```js
+
+const util = require('util');
+
+exports.puts = util.deprecate(function() {
+  for (let i = 0, len = arguments.length; i < len; ++i) {
+    process.stdout.write(arguments[i] + '\n');
+  }
+}, 'util.puts: 使用 console.log 代替');
+
+
+// 执行puts(),输出：(node:17018) DeprecationWarning: util.puts: 使用 console.log 代替
+
+```
+When called, util.deprecate() will return a function that will emit a DeprecationWarning using the process.on('warning') event. By default, this warning will be emitted and printed to stderr exactly once, the first time it is called. After the warning is emitted, the wrapped function is called.
+
+
+
+当被调用时，`util.deprecate() ` 会返回一个函数，并使用`process.on('warning')`事件触发`DeprecationWarning`.
+
+默认情况下，第一个调用时，警告会触发，并输出到stderr。警告触发后，第一个参数包装的函数会执行。
+
+- 如果设置了`--no-deprecation` or `--no-warnings`命令行参数，或者在首次废弃警告触发前设置了`process.noDeprecation` 属性，则`util.deprecate() ` 什么都不会做。
+
+- 如果设置了 `--trace-deprecation` 或 `--trace-warnings` 命令行标记，或者`process.traceDeprecation` 属性设置为 true，则警告与堆栈追踪会在废弃的函数首次被调用时会输出到 stderr。
+
+- 如果设置了 `--throw-deprecation`命令行标记，或者`process.throwDeprecation` 属性被设置为 true，则废弃的函数被调用时会抛出异常。
+
+`--throw-deprecation` 命令行标记和 `process.throwDeprecation` 属性优先于 `--trace-deprecation` 和 `process.traceDeprecation`。
+
+The --throw-deprecation command line flag and process.throwDeprecation property take precedence over --trace-deprecation and process.traceDeprecation.
+
 # util.format(format[, ...args])
+
+- format <string> 类似`printf`函数参数的格式化字符串
+
+第一个参数是一个包含0个或多个占位符的字符串。每个展位符会被向对应的参数转换后的值替换。 支持以下占位符：
+
+
+- %s - 字符串
+- %d - 数字 (integer or floating point value).
+- %i - 整型int.
+- %f - 浮点型.
+- %j - JSON. 如果参数包含循环引用，则使用 '[Circular]' 字符串代替
+- %% - 单一的('%'). 不会消耗参数。
+
+
+
+如果占位符没有相对应的参数，则占位符不会被替换。
+
+```js
+util.format('%s:%s', 'foo');
+// Returns: 'foo:%s'
+```
+如果` util.format() `方法的参数比占位符的数量多，则多出的参数会被强制转换为字符串（对于对象和符号，使用 `util.inspect()`），然后拼接到返回的字符串中，并通过空格进行分割。
+
+```js
+util.format('%s:%s', 'foo', 'bar', 'baz');
+ // 'foo:bar baz'
+```
+
+如果第一个参数不是一个格式字符串，则 `util.format()` 返回所有参数通过空格拼接的字符串。 在底层，每个参数都使用 `util.inspect() `转换为一个字符串。
+
+```js
+util.format(1, 2, 3); 
+// '1 2 3'
+```
+
+如果只传入了一个参数，则会原本输出，不会进行任何格式。
+
+```js
+util.format('%% %s'); // '%% %s'
+```
+
 
 # util.inherits(constructor, superConstructor)
 
