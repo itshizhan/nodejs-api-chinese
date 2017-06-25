@@ -102,7 +102,63 @@ ls.on('close', (code) => {
 
 
 
+**child_process.spawn()、child_process.fork()、child_process.exec() 和 child_process.execFile()** 方法都遵循典型的Node.js API 风格的惯用的异步编程模式。
+
+每个方法都返回一个 ChildProcess 实例。 这些对象实现了 Node.js **EventEmitter** 的 API，允许父进程注册监听器函数，在子进程的整个生命周期期间，当特定的事件发生时会调用这些监听函数。
+
+child_process.exec() 和 child_process.execFile() 方法还可以额外指定一个可选的 callback 函数，当子进程结束时会被调用。
+
+
+
 ### Spawning `.bat` and `.cmd` files on Windows
+
+
+
+ **child_process.exec() 和 child_process.execFile()方法**的重要区别可能基于不同的平台有所不同。
+
+在类Unix操作系统上（Unix, Linux, macOS），child_process.execFile()方法可能更高效，因为，其并不会创建shell。而在Windows系统上，`.bat` 和 `.cmd`文件只会在自己的终端上执行，因此不能通过child_process.execFile()方法启动。在Windows 系统上，要调用`.bat` 和 `.cmd`文件，可以通过使用 child_process.spawn()方法设置shell选项进行调用，或者使用child_process.exec()，或者创建**cmd.exe**并将 `.bat` 或 `.cmd` 文件作为一个参数传入（这也正是shell选项和child_process.exec()所做的事情）。
+
+在任何情形下，如果脚本文件包含空格，必须用引号包含。
+
+
+
+```javascript
+// On Windows Only ...
+const { spawn } = require('child_process');
+const bat = spawn('cmd.exe', ['/c', 'my.bat']);
+
+bat.stdout.on('data', (data) => {
+  console.log(data.toString());
+});
+
+bat.stderr.on('data', (data) => {
+  console.log(data.toString());
+});
+
+bat.on('exit', (code) => {
+  console.log(`Child exited with code ${code}`);
+});
+```
+
+Or:
+
+```javascript
+const { exec } = require('child_process');
+exec('my.bat', (err, stdout, stderr) => {
+  if (err) {
+    console.error(err);
+    return;
+  }
+  console.log(stdout);
+});
+
+// Script with spaces in the filename:
+const bat = spawn('"my script.cmd"', ['a', 'b'], { shell: true });
+// or:
+exec('"my script.cmd" a b', (err, stdout, stderr) => {
+  // ...
+});
+```
 
 
 
