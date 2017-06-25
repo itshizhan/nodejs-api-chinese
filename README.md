@@ -21,4 +21,5 @@
 7. [Utilities工具类 ](https://github.com/leeson8888/nodejs-api-chinese/blob/master/Utilities%E5%B7%A5%E5%85%B7%E7%B1%BB.md) <img src="https://img.shields.io/badge/%E5%B7%B2%E5%AE%8C%E6%88%90-90%25-brightgreen.svg">
 
 
-8. [Child_Process子进程]()
+8. [Child_Process子进程](https://github.com/leeson8888/nodejs-api-chinese/blob/master/Child_Process%E5%AD%90%E8%BF%9B%E7%A8%8B.md)
+<img src="https://img.shields.io/badge/%E5%B7%B2%E5%AE%8C%E6%88%90-30%25-brightgreen.svg">
