@@ -3,6 +3,7 @@
 `child_process` 模块以某种方式衍生子进程的能力。这种方式类似[popen(3)](http://man7.org/linux/man-pages/man3/popen.3.html)，但不完全相同。这种能力主要是基于`child_process.spawn()` 函数实现的。
 
 ```javascript
+//译注：
 console.log(require('child_process'));
 //输出如下：
 { ChildProcess:
@@ -28,7 +29,7 @@ console.log(require('child_process'));
 
 ----
 
-关于popen(): 
+译注：关于popen(): 
 
 ```c
   #include <stdio.h>
@@ -78,7 +79,7 @@ ls.on('close', (code) => {
 
 
 
-为了方便起见，`child_process`提供了一些同步和异步的便捷方法，可以替代`child_process.spawn()`和`child_process.spawnSync()`方法。但是，请注意，这些便捷方法都是在child_process.spawn() or child_process.spawnSync()的基础上实现的。
+为了方便起见，`child_process`提供了一些同步和异步的便捷方法，可以替代`child_process.spawn()`和`child_process.spawnSync()`方法。但是，请注意，这些便捷方法都是在child_process.spawn() 或者child_process.spawnSync()的基础上实现的。
 
 
 
@@ -163,6 +164,42 @@ exec('"my script.cmd" a b', (err, stdout, stderr) => {
 
 
 ### child_process.exec(command[, options][, callback])
+
+- command  —  需要执行的命令，以及由空格分割的参数
+
+- options —  object {}
+
+  - cwd: 字符串，子进程的当前工作目录
+
+  - env ：object，key-val 形式的环境变量
+
+  - encoding ：编码，默认'utf8'
+
+  - shell： 用于执行命令的shell， (UNIX上默认: `'/bin/sh'` ,Windows上默认 `'cmd.exe'` , 该 shell应该能够理解 UNIX  `-c` 开关 或者Windows上的 `/d /s /c` .  Windows上, 命令行的解析应该兼容 `cmd.exe`.)
+
+    > 译注：关于 -c： 可参加man sh，-c string：命令从-c后的字符串读取。 
+
+  - timeout： 默认 0
+
+  - maxBuffer：  stdout or stderr上允许的最大字节数，默认200*1024，如果超过，子进程会被终止。具体参看[`maxBuffer and Unicode`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_maxbuffer_and_unicode) 警告
+
+  - killSignal：默认: `'SIGTERM'`
+
+  - uid：设置该进程的用户标识
+
+  - gid：设置该进程的组标识
+
+    > 译注：关于uid和gid，一个文件都有一个所有者, 表示该文件是谁创建的. 同时, 该文件还有一个组编号, 表示该文件所属的组, 一般为文件所有者所属的组. 
+
+
+- callback: 进程终止时调用，输出如下：
+  - error：<Error>
+  - stdout: 字符串或Buffer
+  - stderr：字符串或Buffer
+
+**`child_process.exec` 命令返回值：Class: ChildProcess**
+
+创建一个shell，然后通过shell执行命令，
 
 
 
