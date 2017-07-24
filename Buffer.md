@@ -93,6 +93,7 @@ const buf6 = Buffer.from('tést', 'latin1');
 
 
 
+### `是什么令Buffer.allocUnsafe()` 和 `Buffer.allocUnsafeSlow()`不安全的？
 
 
 
@@ -100,8 +101,33 @@ const buf6 = Buffer.from('tést', 'latin1');
 
 
 
+## Buffers 和字符编码
 
 
+
+
+
+## Buffers 和 TypedArray
+
+
+
+
+
+## Buffers and ES6 iteration（ES6迭代器）
+
+
+
+
+
+
+
+# Class: Buffer，  Buffer类
+
+
+
+
+
+### 类方法：  Buffer.alloc(size[, fill[, encoding]])
 
 
 
