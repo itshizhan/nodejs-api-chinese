@@ -89,6 +89,18 @@ const buf6 = Buffer.from('tést', 'latin1');
 
 ### The --zero-fill-buffers 命令行选项
 
+Node.js 可以使用`--zero-fill-buffers` 选项，强制使所有通过 new Buffer(size), Buffer.allocUnsafe(), Buffer.allocUnsageSlow()或 new SlowBuffer(size)创建的Buffer的实例自动0充填。使用此选项(flag)，可以改变这些方法的默认行为，并对性能有重要影响。 因此，只有当需要强制新创建的Buffer实例不包含潜在敏感数据时，在有必要推荐使用此选项。
+
+
+
+例如：
+
+```javascript
+node --zero-fill-buffers
+> Buffer.allocUnsafe(5);
+<Buffer 00 00 00 00 00>
+```
+
 
 
 
@@ -109,13 +121,114 @@ const buf6 = Buffer.from('tést', 'latin1');
 
 ## Buffers 和 TypedArray
 
+Buffer实例同时也是Uint8Array实例。但是和EAMAScript2015规范中的TypedArray还是有轻微的不兼容。例如，通过ArrayBuffer#slice创建的slice副本时，Buffer#slice() 的实现是在现有的Buffer上创建，而不需要复制，因此Buffer#slice()更高效。
+
+
+
+遵循以下注意事项，可以通过Buffer创建一个TypedArray实例。
+
+- 1. Buffer 对象的内存是拷贝到TypedArray的，而不是共享的。
+
+- 2. Buffer 对象的内存，是解析为明确元素的数组，而不是目标类型的字节数组。例如，
+
+     `new Uint32Array(Buffer.from([1, 2, 3, 4]))` 创建一个包含[1, 2, 3, 4]元素的Uint32Array，而不是包含单个`[0x1020304]` or `[0x4030201]`的Uint32Array 。
+
+
+
+也可以通过TypeArray 对象的.buffer 属性创建一个新的Buffer，并且和TypedArray实例共享相同的内存分配。
+
+例如：
+
+```javascript
+const arr = new Uint16Array(2);
+
+arr[0] = 5000;
+arr[1] = 4000;
+
+// Copies the contents of `arr`
+const buf1 = Buffer.from(arr);
+
+// Shares memory with `arr`
+const buf2 = Buffer.from(arr.buffer);
+
+// Prints: <Buffer 88 a0>
+console.log(buf1);
+
+// Prints: <Buffer 88 13 a0 0f>
+console.log(buf2);
+
+arr[1] = 6000;
+
+// Prints: <Buffer 88 a0>
+console.log(buf1);
+
+// Prints: <Buffer 88 13 70 17>
+console.log(buf2);
+```
+
+
+
+注意：当使用TypedArray 的.buffer属性创建Buffer时，也可以传入byteOffset 和length参数，只使用基本ArrayBuffer的一部分。
+
+例如：
+
+```javascript
+const arr = new Uint16Array(20);
+const buf = Buffer.from(arr.buffer, 0, 16);
+
+// Prints: 16
+console.log(buf.length);
+```
+
+
+
+Buffer.from()和TypedArray.from() 有着不同的签名和实现。特别的是，TypedArray的变种接收第二个参数，在类型数组的每个元素上调用一次映射函数：
+
+```javascript
+TypedArray.from(source[, mapFn[, thisArg]])
+```
+
+而，Buffer.from()方法不支持使用映射函数：
+
+- [`Buffer.from(array)`](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html#buffer_class_method_buffer_from_array)
+
+- [`Buffer.from(buffer)`](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html#buffer_class_method_buffer_from_buffer)
+
+- [`Buffer.from(arrayBuffer[, byteOffset [, length\]])`](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html#buffer_class_method_buffer_from_arraybuffer_byteoffset_length)
+
+- [`Buffer.from(string[, encoding])`](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html#buffer_class_method_buffer_from_string_encoding)
+
+  ​
+
+
+
+
+
 
 
 
 
 ## Buffers and ES6 iteration（ES6迭代器）
 
+Buffer 实例可以通过Es6 的for..of语法进行迭代。
 
+例如：
+
+```javascript
+const buf = Buffer.from([1, 2, 3]);
+
+// Prints:
+//   1
+//   2
+//   3
+for (const b of buf) {
+  console.log(b);
+}
+```
+
+
+
+此外，[`buf.values()`](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html#buffer_buf_values), [`buf.keys()`](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html#buffer_buf_keys), and [`buf.entries()`](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html#buffer_buf_entries)  方法可用于创建迭代器。
 
 
 
