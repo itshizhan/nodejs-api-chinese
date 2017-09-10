@@ -1,10 +1,10 @@
 # Cluster 集群
 
-A single instance of Node.js runs in a single thread. To take advantage of multi-core systems the user will sometimes want to launch a cluster of Node.js processes to handle the load.
+每个Node.js单个应用实例，都是运行在单一线程上的（A single instance of Node.js runs in a single thread）。
 
-The cluster module allows easy creation of child processes that all share server ports.
+为了能够充分利用多核系统的优势，用户有时候想要启动一个Node.js进程的集群来处理负载(handle the load).
 
-
+ cluster模块允许轻松的创建子进程，并且这些子进程共享服务端口。
 
 ```javascript
 const cluster = require('cluster');
@@ -36,7 +36,7 @@ if (cluster.isMaster) {
 
 
 
-Running Node.js will now share port 8000 between the workers:
+允许上述的Node.js 应用，会在所有进程中共享8000端口。
 
 ```javascript
 $ node server.js
@@ -47,9 +47,7 @@ Worker 6056 started
 Worker 5644 started
 ```
 
-
-
-Please note that on Windows, it is not yet possible to set up a named pipe server in a worker.
+注意，在Windows系统上，目前还不能在工作进程上建立一个命名的管道服务（ a named pipe server）。
 
 
 
@@ -85,15 +83,13 @@ Because workers are all separate processes, they can be killed or re-spawned dep
 
 # Class: Worker
 
-
-
-A Worker object contains all public information and method about a worker. In the master it can be obtained using `cluster.workers`. In a worker it can be obtained using `cluster.worker`.
+Worker对象包含了工作进程的所有的公共信息和方法。 在主进程中，可以通过cluster.workers 获取此对象，在工作进程中，可以通过cluster.worker获得此对象。
 
 
 
 ### Event: 'disconnect',   worker事件
 
-Similar to the `cluster.on('disconnect')` event, but specific to this worker.
+类似于 cluster.on('disconnect') 方法，区别是特指此工作进程。
 
 ```javascript
 cluster.fork().on('disconnect', () => {
@@ -105,18 +101,18 @@ cluster.fork().on('disconnect', () => {
 
 ### Event: 'error',   worker事件
 
-This event is the same as the one provided by [`child_process.fork()`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_process_fork_modulepath_args_options).
+此事件和 [`child_process.fork()`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_process_fork_modulepath_args_options).提供的`error`事件相同。
 
-Within a worker, `process.on('error')` may also be used.
+在工作进程中，可以通过`process.on('error') `监听此事件。
 
 
 
 ### Event: 'exit',   worker事件
 
-- `code`<Number>. the exit code, if it exited normally.
-- `signal` <String> the name of the signal (e.g. `'SIGHUP'`) that caused the process to be killed.
+- `code`<Number>.  正常退出时的退出码
+- `signal` <String>  进程被kill时的信号名称(e.g. `'SIGHUP'`)
 
-Similar to the `cluster.on('exit')` event, but specific to this worker.
+类似于 `cluster.on('exit')` ，不过特指此工作进程。
 
 ```javascript
 const worker = cluster.fork();
@@ -139,7 +135,9 @@ worker.on('exit', (code, signal) => {
 
 - address <Object>
 
-Similar to the `cluster.on('listening')` event, but specific to this worker.
+类似于 `cluster.on('listening')`, 不过特指此工作进程。
+
+
 
 ```javascript
 cluster.fork().on('listening', (address) => {
@@ -147,9 +145,7 @@ cluster.fork().on('listening', (address) => {
 });
 ```
 
-
-
-It is not emitted in the worker.
+注意，此事件不过在工作进程中触发，即在master 中触发。
 
 
 
@@ -158,15 +154,13 @@ It is not emitted in the worker.
 - `message` <Object>
 - `handle` <Object>|<undefined>
 
-Similar to the `cluster.on('message')` event, but specific to this worker.
+类似于 `cluster.on('message')`, 不过特指此工作进程。
 
-Within a worker, `process.on('message')` may also be used.
+在工作进程中，可以使用`process.on('message')` 监听此事件。
 
-See [`process` event: `'message'`](https://nodejs.org/dist/latest-v8.x/docs/api/process.html#process_event_message).
+参加： [`process` event: `'message'`](https://nodejs.org/dist/latest-v8.x/docs/api/process.html#process_event_message).
 
-As an example, here is a cluster that keeps count of the number of requests in the master process using the message system:
-
-
+如下示例，通过message机制来统计主进程中的请求数。
 
 ```javascript
 const cluster = require('cluster');
@@ -216,7 +210,7 @@ if (cluster.isMaster) {
 
 
 
-Similar to the `cluster.on('online')` event, but specific to this worker.
+类似于 `cluster.on('online')` ，不过特指此工作进程。
 
 ```javascript
 cluster.fork().on('online', () => {
@@ -224,29 +218,43 @@ cluster.fork().on('online', () => {
 });
 ```
 
-It is not emitted in the worker.
+注意，此事件不过在工作进程中触发，即在master 中触发。
 
 
 
 ### worker.disconnect()
 
-- Returns: <Worker> A reference to `worker`.
+- Returns: <Worker> 返回`worker`.的引用
 
-In a worker, this function will close all servers, wait for the `'close'` event on those servers, and then disconnect the IPC channel.
+  ​
 
-In the master, an internal message is sent to the worker causing it to call `.disconnect()` on itself.
-
-Causes `.exitedAfterDisconnect` to be set.
-
-Note that after a server is closed, it will no longer accept new connections, but connections may be accepted by any other listening worker. Existing connections will be allowed to close as usual. When no more connections exist, see [`server.close()`](https://nodejs.org/dist/latest-v8.x/docs/api/net.html#net_event_close), the IPC channel to the worker will close allowing it to die gracefully.
-
-The above applies *only* to server connections, client connections are not automatically closed by workers, and disconnect does not wait for them to close before exiting.
-
-Note that in a worker, `process.disconnect` exists, but it is not this function, it is [`disconnect`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_disconnect).
-
-Because long living server connections may block workers from disconnecting, it may be useful to send a message, so application specific actions may be taken to close them. It also may be useful to implement a timeout, killing a worker if the `'disconnect'` event has not been emitted after some time.
+在工作进程中，调用此函数，会关闭所有的服务(servers) 。当这些服务的`close`事件执行后，会断开IPC 管道(channel).
 
 
+
+在主进程中，一个内部的消息会发送到工作进程，使其调用调用自身的`.disconnect()` 方法。
+
+这样， `.exitedAfterDisconnect`  即会设置。
+
+
+
+**注意**，当一个服务(server)关闭后，即不会接受新的连接（connections），此时其他正在监听的工作进程可以继续接受连接。
+
+
+
+已经存在的连接，可以正常关闭。当所有连接都不存在后，IPC 管道即会关闭，工作进程会优雅地死亡，具体参见： [`server.close()`](https://nodejs.org/dist/latest-v8.x/docs/api/net.html#net_event_close)
+
+
+
+以上只会应用于服务端的连接（server connections），对于客户端的连接（client connections ），工作进程不会主动关闭。disconnect 在退出前并不会等待其关闭.
+
+
+
+**注意：**在工作进程中，还存在`process.disconnect` 方法，和此方法并不是同一个。参见： [`disconnect`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_disconnect).
+
+因为服务端的连接长期存在，可能会阻塞工作进程的连接。可以通过发送消息的方式，让应用采取一定的动作进行关闭。也可以通过设置一个超时的方式(implement a timeout)，如果一段时间后，`disconnect`事件还没有触发，可以kill掉工作进程。
+
+示例如下：
 
 ```javascript
 if (cluster.isMaster) {
@@ -287,13 +295,11 @@ if (cluster.isMaster) {
 
 - <boolean>
 
+通过调研.kill()或.disconnect()方法，可以设置此值，在此之前，为undefined。
 
+通过**worker.exitedAfterDisconnect**  返回的boolean值，可以区分进程时主动退出还是意外退出。主进程（master）可以据此值选择是否重新创建（respawn） 新的进程。
 
-Set by calling `.kill()` or `.disconnect()`. Until then, it is `undefined`.
-
-The boolean `worker.exitedAfterDisconnect` allows distinguishing between voluntary and accidental exit, the master may choose not to respawn a worker based on this value.
-
-
+**示例：**
 
 ```javascript
 cluster.on('exit', (worker, code, signal) => {
@@ -310,43 +316,43 @@ worker.kill();
 
 
 
-
-
 ### worker.id
 
 - <Number>
 
-Each new worker is given its own unique id, this id is stored in the `id`.
+每个新创建的工作进程，都有唯一的id，并存储在worker.id中。
 
-While a worker is alive, this is the key that indexes it in cluster.workers
-
-
+在工作进程的活动时，此id可以作为cluster.workers中的索引。
 
 
 
 ### worker.isConnected()
 
-This function returns `true` if the worker is connected to its master via its IPC channel, `false` otherwise. A worker is connected to its master after it has been created. It is disconnected after the `'disconnect'` event is emitted.
+当工作进程通过IPC通过连接到主进程是，此函数返回true，否则返回false。
+
+工作进程（worker）在创建后，会连接到主进程（master），当disconnect事件发送后，才会断开连接。
 
 
 
 ### worker.isDead()
 
-This function returns `true` if the worker's process has terminated (either because of exiting or being signaled). Otherwise, it returns `false`.
+当工作进程被终止时，不管是主动退出，还是通过signal终止，此函数返回true。否则返回false
 
 
 
 ### worker.kill([signal='SIGTERM'])
 
-- `signal` <String> Name of the kill signal to send to the worker process.
+- `signal` <String> 发送给工作进程的终止信号的名称。
 
-This function will kill the worker. In the master, it does this by disconnecting the `worker.process`, and once disconnected, killing with `signal`. In the worker, it does it by disconnecting the channel, and then exiting with code `0`.
 
-Causes `.exitedAfterDisconnect` to be set.
 
-This method is aliased as `worker.destroy()` for backwards compatibility.
+此方法（函数）会kill工作进程。 在主进程中，通过断开与worker.process的连接，一旦连接断开，通过signal kill工作进程。 在工作进程中，通过断开与管道的连接，可以退出（退出码为0）。
 
-Note that in a worker, `process.kill()` exists, but it is not this function, it is [`kill`](https://nodejs.org/dist/latest-v8.x/docs/api/process.html#process_process_kill_pid_signal).
+调用此方法后，将会设置`worker.exitedAfterDisconnect`
+
+为了向后兼容，此方法还有一个别名：`worker.destroy()`
+
+注意，在工作进程中，也有一个`process.kill()`方法.
 
 
 
@@ -354,30 +360,28 @@ Note that in a worker, `process.kill()` exists, but it is not this function, it 
 
 - <ChildProcess>
 
-All workers are created using [`child_process.fork()`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_process_fork_modulepath_args_options), the returned object from this function is stored as `.process`. In a worker, the global `process` is stored.
+所有工作进程，底层都是通过`child_process.fork()`创建的，此函数的返回对象即存储在**.process**中，在工作进程中，process是全局对象（master中使用worker.process）。
 
-See: [Child Process module](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_process_fork_modulepath_args_options)
+参见： [Child Process module](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_process_fork_modulepath_args_options)
 
-Note that workers will call `process.exit(0)` if the `'disconnect'` event occurs on `process` and `.exitedAfterDisconnect` is not `true`. This protects against accidental disconnection.
-
-
+注意：当process的`disconnect`事件发生时，并且worker.exitedAfterDisconnect的值不为true时，工作进程会调用process.exit(0)优雅的退出。 这样可以避免连接意外断开。
 
 
 
-### worker.send(message[, sendHandle][, callback])
+### worker.send(message [, sendHandle]，[, callback])
 
 - `message`<Object>
 - `sendHandle` <Handle>
 - `callback`<Function>
 - Returns: Boolean
 
-Send a message to a worker or master, optionally with a handle.
+向工作进程或主进程发送消息，或者发送一个handle(可选的)。
 
-In the master this sends a message to a specific worker. It is identical to [`ChildProcess.send()`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_send_message_sendhandle_options_callback).
+如果是主进程，可以向指定的worker发送消息，等同于 [`ChildProcess.send()`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_send_message_sendhandle_options_callback).
 
-In a worker this sends a message to the master. It is identical to `process.send()`.
+如果是工作进程，可以向master发送消息，等同于`process.send()`.
 
-This example will echo back all messages from the master:
+下面示例中，主进程中向工作进程发送消息，工作进程监听到此消息后，将此消息返回给主进程。
 
 
 
@@ -398,8 +402,6 @@ if (cluster.isMaster) {
 
 
 # Event: 'disconnect'，  cluster事件
-
-
 
 - worker <cluster.Worker>
 
@@ -472,8 +474,6 @@ cluster.on('exit', (worker, code, signal) => {
   errorMsg();
 });
 ```
-
-
 
 
 
@@ -552,8 +552,6 @@ cluster.on('online', (worker) => {
 
 
 
-
-## 
 
 # Event: 'setup'，事件
 
@@ -676,24 +674,22 @@ This object is not intended to be changed or set manually.
 
   ​
 
-  示例：
+示例：
 
-  ```javascript
-  const cluster = require('cluster');
-  cluster.setupMaster({
-    exec: 'worker.js',
-    args: ['--use', 'https'],
-    silent: true
-  });
-  cluster.fork(); // https worker
-  cluster.setupMaster({
-    exec: 'worker.js',
-    args: ['--use', 'http']
-  });
-  cluster.fork(); // http worker
-  ```
-
-  ​
+```javascript
+const cluster = require('cluster');
+cluster.setupMaster({
+  exec: 'worker.js',
+  args: ['--use', 'https'],
+  silent: true
+});
+cluster.fork(); // https worker
+cluster.setupMaster({
+  exec: 'worker.js',
+  args: ['--use', 'http']
+});
+cluster.fork(); // http worker
+```
 
 此方法只能在主进程中调用。
 
