@@ -53,8 +53,6 @@ Worker 5644 started
 
 # How It Works 集群是如何工作的
 
-
-
 The worker processes are spawned using the [`child_process.fork()`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_process_fork_modulepath_args_options) method, so that they can communicate with the parent via IPC and pass server handles back and forth.
 
 The cluster module supports two methods of distributing incoming connections.
@@ -85,9 +83,7 @@ Because workers are all separate processes, they can be killed or re-spawned dep
 
 Worker对象包含了工作进程的所有的公共信息和方法。 在主进程中，可以通过cluster.workers 获取此对象，在工作进程中，可以通过cluster.worker获得此对象。
 
-
-
-### Event: 'disconnect',   worker事件
+## Event: 'disconnect',   worker事件
 
 类似于 cluster.on('disconnect') 方法，区别是特指此工作进程。
 
@@ -96,8 +92,6 @@ cluster.fork().on('disconnect', () => {
   // Worker has disconnected
 });
 ```
-
-
 
 ### Event: 'error',   worker事件
 
@@ -129,15 +123,11 @@ worker.on('exit', (code, signal) => {
 
 
 
-
-
 ### Event: 'listening',   worker事件
 
-- address <Object>
+- `address` <Object>
 
 类似于 `cluster.on('listening')`, 不过特指此工作进程。
-
-
 
 ```javascript
 cluster.fork().on('listening', (address) => {
@@ -152,13 +142,13 @@ cluster.fork().on('listening', (address) => {
 ### Event: 'message'， worker事件
 
 - `message` <Object>
-- `handle` <Object>|<undefined>
+- `handle` <Object> 或 <undefined>
 
 类似于 `cluster.on('message')`, 不过特指此工作进程。
 
 在工作进程中，可以使用`process.on('message')` 监听此事件。
 
-参加： [`process` event: `'message'`](https://nodejs.org/dist/latest-v8.x/docs/api/process.html#process_event_message).
+参见： [`process` event: `'message'`](https://nodejs.org/dist/latest-v8.x/docs/api/process.html#process_event_message).
 
 如下示例，通过message机制来统计主进程中的请求数。
 
@@ -206,9 +196,7 @@ if (cluster.isMaster) {
 
 
 
-###  Event: 'online', worker事件
-
-
+### Event: 'online', worker事件
 
 类似于 `cluster.on('online')` ，不过特指此工作进程。
 
@@ -226,35 +214,24 @@ cluster.fork().on('online', () => {
 
 - Returns: <Worker> 返回`worker`.的引用
 
-  ​
 
 在工作进程中，调用此函数，会关闭所有的服务(servers) 。当这些服务的`close`事件执行后，会断开IPC 管道(channel).
-
-
 
 在主进程中，一个内部的消息会发送到工作进程，使其调用调用自身的`.disconnect()` 方法。
 
 这样， `.exitedAfterDisconnect`  即会设置。
 
-
-
 **注意**，当一个服务(server)关闭后，即不会接受新的连接（connections），此时其他正在监听的工作进程可以继续接受连接。
-
-
 
 已经存在的连接，可以正常关闭。当所有连接都不存在后，IPC 管道即会关闭，工作进程会优雅地死亡，具体参见： [`server.close()`](https://nodejs.org/dist/latest-v8.x/docs/api/net.html#net_event_close)
 
-
-
 以上只会应用于服务端的连接（server connections），对于客户端的连接（client connections ），工作进程不会主动关闭。disconnect 在退出前并不会等待其关闭.
-
-
 
 **注意：**在工作进程中，还存在`process.disconnect` 方法，和此方法并不是同一个。参见： [`disconnect`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_disconnect).
 
 因为服务端的连接长期存在，可能会阻塞工作进程的连接。可以通过发送消息的方式，让应用采取一定的动作进行关闭。也可以通过设置一个超时的方式(implement a timeout)，如果一段时间后，`disconnect`事件还没有触发，可以kill掉工作进程。
 
-示例如下：
+**示例如下：**
 
 ```javascript
 if (cluster.isMaster) {
@@ -383,8 +360,6 @@ worker.kill();
 
 下面示例中，主进程中向工作进程发送消息，工作进程监听到此消息后，将此消息返回给主进程。
 
-
-
 ```javascript
 if (cluster.isMaster) {
   const worker = cluster.fork();
@@ -399,25 +374,19 @@ if (cluster.isMaster) {
 
 
 
-
-
 # Event: 'disconnect'，  cluster事件
 
 - worker <cluster.Worker>
 
-  ​
+**工作进程**的IPC管道断开时触发。当工作进程优雅的退出，被kill，或者手工断开（例如调用 worker.disconnect方法）时发生。
 
-  **工作进程**的IPC管道断开时触发。当工作进程优雅的退出，被kill，或者手工断开（例如调用 worker.disconnect方法）时发生。
+disconnect和exit事件之间可能会有延迟，这些事件常用来检查进程在清理过程中卡住(stuck:卡住，动不了)，或者是否有长连接。
 
-  disconnect和exit事件之间可能会有延迟，这些事件常用来检查进程在清理过程中卡住(stuck:卡住，动不了)，或者是否有长连接。
-
-  ```javascript
-  cluster.on('disconnect', (worker) => {
-    console.log(`The worker #${worker.id} has disconnected`);
-  });
-  ```
-
-
+```javascript
+cluster.on('disconnect', (worker) => {
+  console.log(`The worker #${worker.id} has disconnected`);
+});
+```
 
 # Event: 'exit'，  cluster事件
 
@@ -451,8 +420,6 @@ cluster.on('exit', (worker, code, signal) => {
 # Event: 'fork' , 事件
 
 - worker： <cluster.Worker>
-
-  ​
 
 当fork一个新的工作进程时，cluster模块会触发fork事件。 这可以用于记录(log)当前工作经常活动的日志，创建一个自定义超时。
 
@@ -520,8 +487,6 @@ cluster.on('listening', (worker, address) => {
 
 如果需要支持老的版本，并且不需要`worder`对象的话, 可以通过检查参数的个数来解决此差异（ work around the discrepancy）。
 
-
-
 ```javascript
 cluster.on('message', (worker, message, handle) => {
   if (arguments.length === 2) {
@@ -552,10 +517,10 @@ cluster.on('online', (worker) => {
 
 
 
-
 # Event: 'setup'，事件
 
 - settings <Object>
+
 
 每次调用setupMaster()方法时，触发此事件。
 
@@ -581,13 +546,8 @@ cluster.on('online', (worker) => {
 
 # cluster.fork([env])
 
-
-
 - `env`  以Key/value 的形式为工作进程添加环境变量
-
 - return <cluster.Worker> 返回cluster.Worker
-
-  ​
 
 此方法只能在主进程中调用。
 
@@ -671,8 +631,6 @@ This object is not intended to be changed or set manually.
 -  上述的默认设置只会在第一次调用时生效。 后续调用时，只会使用`cluster.setupMaster()` 
 
   调用时的当前值。
-
-  ​
 
 示例：
 
@@ -764,3 +722,5 @@ socket.on('data', (id) => {
 });
 ```
 
+
+​              
