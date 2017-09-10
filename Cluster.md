@@ -378,7 +378,20 @@ if (cluster.isMaster) {
 
 - worker <cluster.Worker>
 
+<<<<<<< HEAD
 **工作进程**的IPC管道断开时触发。当工作进程优雅的退出，被kill，或者手工断开（例如调用 worker.disconnect方法）时发生。
+=======
+ 
+  **工作进程**的IPC管道断开时触发。当工作进程优雅的退出，被kill，或者手工断开（例如调用 worker.disconnect方法）时发生。
+
+  disconnect和exit事件之间可能会有延迟，这些事件常用来检查进程在清理过程中卡住(stuck:卡住，动不了)，或者是否有长连接。
+
+  ```javascript
+  cluster.on('disconnect', (worker) => {
+    console.log(`The worker #${worker.id} has disconnected`);
+  });
+  ```
+>>>>>>> origin/master
 
 disconnect和exit事件之间可能会有延迟，这些事件常用来检查进程在清理过程中卡住(stuck:卡住，动不了)，或者是否有长连接。
 
@@ -396,7 +409,6 @@ cluster.on('disconnect', (worker) => {
 
 - signal：进程被killed时候的信号名称（例如：'SIGHUP'）
 
-  ​
 
 任何一个工作进程死亡时（例如：kill -9 pid, kill -HUP pid）, 会触发此事件。
 
@@ -421,6 +433,10 @@ cluster.on('exit', (worker, code, signal) => {
 
 - worker： <cluster.Worker>
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
 当fork一个新的工作进程时，cluster模块会触发fork事件。 这可以用于记录(log)当前工作经常活动的日志，创建一个自定义超时。
 
 ```javascript
@@ -516,7 +532,10 @@ cluster.on('online', (worker) => {
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/master
 # Event: 'setup'，事件
 
 - settings <Object>
@@ -549,6 +568,10 @@ cluster.on('online', (worker) => {
 - `env`  以Key/value 的形式为工作进程添加环境变量
 - return <cluster.Worker> 返回cluster.Worker
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
 此方法只能在主进程中调用。
 
 
@@ -607,7 +630,6 @@ cluster.on('online', (worker) => {
   - inspectPort：
 
 
-
 After calling `.setupMaster()` (or `.fork()`) this settings object will contain the settings, including the default values.
 
 This object is not intended to be changed or set manually.
@@ -632,6 +654,10 @@ This object is not intended to be changed or set manually.
 
   调用时的当前值。
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
 示例：
 
 ```javascript
@@ -650,7 +676,6 @@ cluster.fork(); // http worker
 ```
 
 此方法只能在主进程中调用。
-
 
 
 # cluster.worker
@@ -687,7 +712,6 @@ I am worker #2
 I am worker #3
 
 ```
-
 
 
 # cluster.workers
