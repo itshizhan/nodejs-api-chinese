@@ -1,5 +1,398 @@
 # Cluster 集群
 
+A single instance of Node.js runs in a single thread. To take advantage of multi-core systems the user will sometimes want to launch a cluster of Node.js processes to handle the load.
+
+The cluster module allows easy creation of child processes that all share server ports.
+
+
+
+```javascript
+const cluster = require('cluster');
+const http = require('http');
+const numCPUs = require('os').cpus().length;
+
+if (cluster.isMaster) {
+  console.log(`Master ${process.pid} is running`);
+
+  // Fork workers.
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`worker ${worker.process.pid} died`);
+  });
+} else {
+  // Workers can share any TCP connection
+  // In this case it is an HTTP server
+  http.createServer((req, res) => {
+    res.writeHead(200);
+    res.end('hello world\n');
+  }).listen(8000);
+
+  console.log(`Worker ${process.pid} started`);
+}
+```
+
+
+
+Running Node.js will now share port 8000 between the workers:
+
+```javascript
+$ node server.js
+Master 3596 is running
+Worker 4324 started
+Worker 4520 started
+Worker 6056 started
+Worker 5644 started
+```
+
+
+
+Please note that on Windows, it is not yet possible to set up a named pipe server in a worker.
+
+
+
+# How It Works 集群是如何工作的
+
+
+
+The worker processes are spawned using the [`child_process.fork()`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_process_fork_modulepath_args_options) method, so that they can communicate with the parent via IPC and pass server handles back and forth.
+
+The cluster module supports two methods of distributing incoming connections.
+
+The first one (and the default one on all platforms except Windows), is the round-robin approach, where the master process listens on a port, accepts new connections and distributes them across the workers in a round-robin fashion, with some built-in smarts to avoid overloading a worker process.
+
+The second approach is where the master process creates the listen socket and sends it to interested workers. The workers then accept incoming connections directly.
+
+The second approach should, in theory, give the best performance. In practice however, distribution tends to be very unbalanced due to operating system scheduler vagaries. Loads have been observed where over 70% of all connections ended up in just two processes, out of a total of eight.
+
+Because `server.listen()` hands off most of the work to the master process, there are three cases where the behavior between a normal Node.js process and a cluster worker differs:
+
+
+
+1. `server.listen({fd: 7})` Because the message is passed to the master, file descriptor 7 **in the parent** will be listened on, and the handle passed to the worker, rather than listening to the worker's idea of what the number 7 file descriptor references.
+2. `server.listen(handle)` Listening on handles explicitly will cause the worker to use the supplied handle, rather than talk to the master process.
+3. `server.listen(0)` Normally, this will cause servers to listen on a random port. However, in a cluster, each worker will receive the same "random" port each time they do `listen(0)`. In essence, the port is random the first time, but predictable thereafter. To listen on a unique port, generate a port number based on the cluster worker ID.
+
+
+
+*Note*: Node.js does not provide routing logic. It is, therefore important to design an application such that it does not rely too heavily on in-memory data objects for things like sessions and login.
+
+Because workers are all separate processes, they can be killed or re-spawned depending on a program's needs, without affecting other workers. As long as there are some workers still alive, the server will continue to accept connections. If no workers are alive, existing connections will be dropped and new connections will be refused. Node.js does not automatically manage the number of workers, however. It is the application's responsibility to manage the worker pool based on its own needs.
+
+
+
+# Class: Worker
+
+
+
+A Worker object contains all public information and method about a worker. In the master it can be obtained using `cluster.workers`. In a worker it can be obtained using `cluster.worker`.
+
+
+
+### Event: 'disconnect',   worker事件
+
+Similar to the `cluster.on('disconnect')` event, but specific to this worker.
+
+```javascript
+cluster.fork().on('disconnect', () => {
+  // Worker has disconnected
+});
+```
+
+
+
+### Event: 'error',   worker事件
+
+This event is the same as the one provided by [`child_process.fork()`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_process_fork_modulepath_args_options).
+
+Within a worker, `process.on('error')` may also be used.
+
+
+
+### Event: 'exit',   worker事件
+
+- `code`<Number>. the exit code, if it exited normally.
+- `signal` <String> the name of the signal (e.g. `'SIGHUP'`) that caused the process to be killed.
+
+Similar to the `cluster.on('exit')` event, but specific to this worker.
+
+```javascript
+const worker = cluster.fork();
+worker.on('exit', (code, signal) => {
+  if (signal) {
+    console.log(`worker was killed by signal: ${signal}`);
+  } else if (code !== 0) {
+    console.log(`worker exited with error code: ${code}`);
+  } else {
+    console.log('worker success!');
+  }
+});
+```
+
+
+
+
+
+### Event: 'listening',   worker事件
+
+- address <Object>
+
+Similar to the `cluster.on('listening')` event, but specific to this worker.
+
+```javascript
+cluster.fork().on('listening', (address) => {
+  // Worker is listening
+});
+```
+
+
+
+It is not emitted in the worker.
+
+
+
+### Event: 'message'， worker事件
+
+- `message` <Object>
+- `handle` <Object>|<undefined>
+
+Similar to the `cluster.on('message')` event, but specific to this worker.
+
+Within a worker, `process.on('message')` may also be used.
+
+See [`process` event: `'message'`](https://nodejs.org/dist/latest-v8.x/docs/api/process.html#process_event_message).
+
+As an example, here is a cluster that keeps count of the number of requests in the master process using the message system:
+
+
+
+```javascript
+const cluster = require('cluster');
+const http = require('http');
+
+if (cluster.isMaster) {
+
+  // Keep track of http requests
+  let numReqs = 0;
+  setInterval(() => {
+    console.log(`numReqs = ${numReqs}`);
+  }, 1000);
+
+  // Count requests
+  function messageHandler(msg) {
+    if (msg.cmd && msg.cmd === 'notifyRequest') {
+      numReqs += 1;
+    }
+  }
+
+  // Start workers and listen for messages containing notifyRequest
+  const numCPUs = require('os').cpus().length;
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  for (const id in cluster.workers) {
+    cluster.workers[id].on('message', messageHandler);
+  }
+
+} else {
+
+  // Worker processes have a http server.
+  http.Server((req, res) => {
+    res.writeHead(200);
+    res.end('hello world\n');
+
+    // notify master about the request
+    process.send({ cmd: 'notifyRequest' });
+  }).listen(8000);
+}
+```
+
+
+
+###  Event: 'online', worker事件
+
+
+
+Similar to the `cluster.on('online')` event, but specific to this worker.
+
+```javascript
+cluster.fork().on('online', () => {
+  // Worker is online
+});
+```
+
+It is not emitted in the worker.
+
+
+
+### worker.disconnect()
+
+- Returns: <Worker> A reference to `worker`.
+
+In a worker, this function will close all servers, wait for the `'close'` event on those servers, and then disconnect the IPC channel.
+
+In the master, an internal message is sent to the worker causing it to call `.disconnect()` on itself.
+
+Causes `.exitedAfterDisconnect` to be set.
+
+Note that after a server is closed, it will no longer accept new connections, but connections may be accepted by any other listening worker. Existing connections will be allowed to close as usual. When no more connections exist, see [`server.close()`](https://nodejs.org/dist/latest-v8.x/docs/api/net.html#net_event_close), the IPC channel to the worker will close allowing it to die gracefully.
+
+The above applies *only* to server connections, client connections are not automatically closed by workers, and disconnect does not wait for them to close before exiting.
+
+Note that in a worker, `process.disconnect` exists, but it is not this function, it is [`disconnect`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_disconnect).
+
+Because long living server connections may block workers from disconnecting, it may be useful to send a message, so application specific actions may be taken to close them. It also may be useful to implement a timeout, killing a worker if the `'disconnect'` event has not been emitted after some time.
+
+
+
+```javascript
+if (cluster.isMaster) {
+  const worker = cluster.fork();
+  let timeout;
+
+  worker.on('listening', (address) => {
+    worker.send('shutdown');
+    worker.disconnect();
+    timeout = setTimeout(() => {
+      worker.kill();
+    }, 2000);
+  });
+
+  worker.on('disconnect', () => {
+    clearTimeout(timeout);
+  });
+
+} else if (cluster.isWorker) {
+  const net = require('net');
+  const server = net.createServer((socket) => {
+    // connections never end
+  });
+
+  server.listen(8000);
+
+  process.on('message', (msg) => {
+    if (msg === 'shutdown') {
+      // initiate graceful close of any connections to server
+    }
+  });
+}
+```
+
+
+
+### worker.exitedAfterDisconnect
+
+- <boolean>
+
+
+
+Set by calling `.kill()` or `.disconnect()`. Until then, it is `undefined`.
+
+The boolean `worker.exitedAfterDisconnect` allows distinguishing between voluntary and accidental exit, the master may choose not to respawn a worker based on this value.
+
+
+
+```javascript
+cluster.on('exit', (worker, code, signal) => {
+  if (worker.exitedAfterDisconnect === true) {
+    console.log('Oh, it was just voluntary – no need to worry');
+  }
+});
+
+// kill worker
+worker.kill();
+
+
+```
+
+
+
+
+
+### worker.id
+
+- <Number>
+
+Each new worker is given its own unique id, this id is stored in the `id`.
+
+While a worker is alive, this is the key that indexes it in cluster.workers
+
+
+
+
+
+### worker.isConnected()
+
+This function returns `true` if the worker is connected to its master via its IPC channel, `false` otherwise. A worker is connected to its master after it has been created. It is disconnected after the `'disconnect'` event is emitted.
+
+
+
+### worker.isDead()
+
+This function returns `true` if the worker's process has terminated (either because of exiting or being signaled). Otherwise, it returns `false`.
+
+
+
+### worker.kill([signal='SIGTERM'])
+
+- `signal` <String> Name of the kill signal to send to the worker process.
+
+This function will kill the worker. In the master, it does this by disconnecting the `worker.process`, and once disconnected, killing with `signal`. In the worker, it does it by disconnecting the channel, and then exiting with code `0`.
+
+Causes `.exitedAfterDisconnect` to be set.
+
+This method is aliased as `worker.destroy()` for backwards compatibility.
+
+Note that in a worker, `process.kill()` exists, but it is not this function, it is [`kill`](https://nodejs.org/dist/latest-v8.x/docs/api/process.html#process_process_kill_pid_signal).
+
+
+
+### worker.process
+
+- <ChildProcess>
+
+All workers are created using [`child_process.fork()`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_process_fork_modulepath_args_options), the returned object from this function is stored as `.process`. In a worker, the global `process` is stored.
+
+See: [Child Process module](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_process_fork_modulepath_args_options)
+
+Note that workers will call `process.exit(0)` if the `'disconnect'` event occurs on `process` and `.exitedAfterDisconnect` is not `true`. This protects against accidental disconnection.
+
+
+
+
+
+### worker.send(message[, sendHandle][, callback])
+
+- `message`<Object>
+- `sendHandle` <Handle>
+- `callback`<Function>
+- Returns: Boolean
+
+Send a message to a worker or master, optionally with a handle.
+
+In the master this sends a message to a specific worker. It is identical to [`ChildProcess.send()`](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_send_message_sendhandle_options_callback).
+
+In a worker this sends a message to the master. It is identical to `process.send()`.
+
+This example will echo back all messages from the master:
+
+
+
+```javascript
+if (cluster.isMaster) {
+  const worker = cluster.fork();
+  worker.send('hi there');
+
+} else if (cluster.isWorker) {
+  process.on('message', (msg) => {
+    process.send(msg);
+  });
+}
+```
+
 
 
 
@@ -86,13 +479,59 @@ cluster.on('exit', (worker, code, signal) => {
 
 # Event: 'listening' ,事件
 
+- `worker` <cluster.Worker>
+- `address` <Object>
 
+当在工作进程上调用listen()方法后，listening事件会在服务上(工作进程的)触发，同时主进程的cluster也会触发此事件。
+
+**listening**事件的处理函数有两个参数，`worker`参数包含了工作进程对象，`address`对象包含了如下的连接属性：address，port和addressType。这对于工作进程监听多个地址是非常有用。
+
+示例：
+
+```javascript
+cluster.on('listening', (worker, address) => {
+  console.log(
+    `A worker is now connected to ${address.address}:${address.port}`);
+});
+```
+
+ `addressType` 的值如下：
+
+- `4` (TCPv4)
+- `6` (TCPv6)
+- `-1` (unix domain socket)
+- `"udp4"` or `"udp6"` (UDP v4 or v6)
 
 
 
 # Event: 'message'，事件
 
+- `worker` <cluster.Worker>
+- `message` <Object>
+- `handle` <Object>|<undefined>
 
+
+
+当主进程（master）接收到任何一个工作进程的消息时触发此事件。
+
+参加： [child_process event: 'message'](https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_event_message). 
+
+在Node.js v6.0之前，此事件的回调函数只接收`message` 和`handle`两个参数，而不包括`worker`对象，这一点当前文档展示的不一样(contrary to:与…相反)。
+
+如果需要支持老的版本，并且不需要`worder`对象的话, 可以通过检查参数的个数来解决此差异（ work around the discrepancy）。
+
+
+
+```javascript
+cluster.on('message', (worker, message, handle) => {
+  if (arguments.length === 2) {
+    handle = message;
+    message = worker;
+    worker = undefined;
+  }
+  // ...
+});
+```
 
 
 
