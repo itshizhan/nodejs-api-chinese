@@ -129,8 +129,6 @@ worker.on('exit', (code, signal) => {
 
 
 
-
-
 ### Event: 'listening',   worker事件
 
 - address <Object>
@@ -226,7 +224,6 @@ cluster.fork().on('online', () => {
 
 - Returns: <Worker> 返回`worker`.的引用
 
-  ​
 
 在工作进程中，调用此函数，会关闭所有的服务(servers) 。当这些服务的`close`事件执行后，会断开IPC 管道(channel).
 
@@ -399,14 +396,11 @@ if (cluster.isMaster) {
 
 
 
-
-
 # Event: 'disconnect'，  cluster事件
 
 - worker <cluster.Worker>
 
-  ​
-
+ 
   **工作进程**的IPC管道断开时触发。当工作进程优雅的退出，被kill，或者手工断开（例如调用 worker.disconnect方法）时发生。
 
   disconnect和exit事件之间可能会有延迟，这些事件常用来检查进程在清理过程中卡住(stuck:卡住，动不了)，或者是否有长连接。
@@ -427,7 +421,6 @@ if (cluster.isMaster) {
 
 - signal：进程被killed时候的信号名称（例如：'SIGHUP'）
 
-  ​
 
 任何一个工作进程死亡时（例如：kill -9 pid, kill -HUP pid）, 会触发此事件。
 
@@ -452,7 +445,6 @@ cluster.on('exit', (worker, code, signal) => {
 
 - worker： <cluster.Worker>
 
-  ​
 
 当fork一个新的工作进程时，cluster模块会触发fork事件。 这可以用于记录(log)当前工作经常活动的日志，创建一个自定义超时。
 
@@ -551,8 +543,6 @@ cluster.on('online', (worker) => {
 
 
 
-
-
 # Event: 'setup'，事件
 
 - settings <Object>
@@ -587,7 +577,6 @@ cluster.on('online', (worker) => {
 
 - return <cluster.Worker> 返回cluster.Worker
 
-  ​
 
 此方法只能在主进程中调用。
 
@@ -647,7 +636,6 @@ cluster.on('online', (worker) => {
   - inspectPort：
 
 
-
 After calling `.setupMaster()` (or `.fork()`) this settings object will contain the settings, including the default values.
 
 This object is not intended to be changed or set manually.
@@ -672,7 +660,6 @@ This object is not intended to be changed or set manually.
 
   调用时的当前值。
 
-  ​
 
 示例：
 
@@ -692,7 +679,6 @@ cluster.fork(); // http worker
 ```
 
 此方法只能在主进程中调用。
-
 
 
 # cluster.worker
@@ -729,7 +715,6 @@ I am worker #2
 I am worker #3
 
 ```
-
 
 
 # cluster.workers
