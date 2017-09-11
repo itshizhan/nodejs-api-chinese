@@ -30,3 +30,10 @@
 10. [Cluster](https://github.com/leeson8888/nodejs-api-chinese/blob/master/Cluster.md) <img src="https://img.shields.io/badge/%E5%B7%B2%E5%AE%8C%E6%88%90-90%25-brightgreen.svg">
 
 
+
+
+<hr>
+
+# 源码解析
+
+1. [EventEmitter源码逐行注释](https://github.com/leeson8888/nodejs-api-chinese/blob/master/Cluster.md) <img src="https://img.shields.io/badge/%E5%B7%B2%E5%AE%8C%E6%88%90-30%25-brightgreen.svg">)
