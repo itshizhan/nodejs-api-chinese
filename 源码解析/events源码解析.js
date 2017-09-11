@@ -93,16 +93,22 @@ EventEmitter.prototype.getMaxListeners = function getMaxListeners() {
 // arguments and can be deoptimized because of that. These functions always have
 // the same number of arguments and thus do not get deoptimized, so the code
 // inside them can execute faster.
+
+// 回调函数没有参数
 function emitNone(handler, isFn, self) {
   if (isFn)
+    // 如果是函数直接调用
     handler.call(self);
   else {
+    // 如果是数组，拷贝后遍历执行
     var len = handler.length;
     var listeners = arrayClone(handler, len);
     for (var i = 0; i < len; ++i)
       listeners[i].call(self);
   }
 }
+
+//回调函数1个参数
 function emitOne(handler, isFn, self, arg1) {
   if (isFn)
     handler.call(self, arg1);
@@ -113,6 +119,7 @@ function emitOne(handler, isFn, self, arg1) {
       listeners[i].call(self, arg1);
   }
 }
+//回调函数2个参数
 function emitTwo(handler, isFn, self, arg1, arg2) {
   if (isFn)
     handler.call(self, arg1, arg2);
@@ -123,6 +130,7 @@ function emitTwo(handler, isFn, self, arg1, arg2) {
       listeners[i].call(self, arg1, arg2);
   }
 }
+//回调函数3个参数
 function emitThree(handler, isFn, self, arg1, arg2, arg3) {
   if (isFn)
     handler.call(self, arg1, arg2, arg3);
@@ -134,6 +142,7 @@ function emitThree(handler, isFn, self, arg1, arg2, arg3) {
   }
 }
 
+//回调函数多个参数，遍历
 function emitMany(handler, isFn, self, args) {
   if (isFn)
     handler.apply(self, args);
@@ -145,13 +154,20 @@ function emitMany(handler, isFn, self, args) {
   }
 }
 
+//emit 方法用于触发事件，返回true 或false，或抛出异常
 EventEmitter.prototype.emit = function emit(type) {
+  // 定义临时变量
   var er, handler, len, args, i, events, domain;
   var needDomainExit = false;
+
+  //如果参数是error，则是触发error事件
   var doError = (type === 'error');
 
+  // events 即当前的事件队列
   events = this._events;
+  // 继续处理doError
   if (events)
+    //doError 为true
     doError = (doError && events.error == null);
   else if (!doError)
     return false;
@@ -160,8 +176,10 @@ EventEmitter.prototype.emit = function emit(type) {
 
   // If there is no 'error' event listener then throw.
   if (doError) {
+    //触发error事件，且有第二个参数
     if (arguments.length > 1)
       er = arguments[1];
+
     if (domain) {
       if (!er)
         er = new Error('Unhandled "error" event');
@@ -172,9 +190,11 @@ EventEmitter.prototype.emit = function emit(type) {
       }
       domain.emit('error', er);
     } else if (er instanceof Error) {
+      // 直接抛出异常
       throw er; // Unhandled 'error' event
     } else {
       // At least give some kind of context to the user
+      // 抛出自定义异常
       const err = new Error('Unhandled "error" event. (' + er + ')');
       err.context = er;
       throw err;
@@ -182,33 +202,43 @@ EventEmitter.prototype.emit = function emit(type) {
     return false;
   }
 
+
+  //获取触发事件名称对应的回调函数，events = this._events的分析见下文
   handler = events[type];
 
+  //未定义回调函数
   if (!handler)
     return false;
 
+   //如果使用了domain
   if (domain && this !== process) {
     domain.enter();
     needDomainExit = true;
   }
 
+  //触发的事件有监听函数，根据参数分别进行处理？ 这里为什么要分别处理呢？ 性能问题？
+  //emit参数最好不要太多，回调函数的参数最好不要超过3个，否则性能会慢
   var isFn = typeof handler === 'function';
   len = arguments.length;
   switch (len) {
     // fast cases
     case 1:
+      //回调函数没有参数
       emitNone(handler, isFn, this);
       break;
     case 2:
+      //回调函数有1个参数 
       emitOne(handler, isFn, this, arguments[1]);
       break;
     case 3:
+      //回调函数有2个参数 
       emitTwo(handler, isFn, this, arguments[1], arguments[2]);
       break;
     case 4:
+      //回调函数有3个参数 
       emitThree(handler, isFn, this, arguments[1], arguments[2], arguments[3]);
       break;
-    // slower
+    // slower //多个参数
     default:
       args = new Array(len - 1);
       for (i = 1; i < len; i++)
@@ -216,11 +246,13 @@ EventEmitter.prototype.emit = function emit(type) {
       emitMany(handler, isFn, this, args);
   }
 
+  //继续处理domain
   if (needDomainExit)
     domain.exit();
 
   return true;
 };
+
 
 function _addListener(target, type, listener, prepend) {
   var m;
