@@ -254,6 +254,7 @@ EventEmitter.prototype.emit = function emit(type) {
 };
 
 
+//addListener 方法底层
 function _addListener(target, type, listener, prepend) {
   var m;
   var events;
@@ -319,16 +320,18 @@ function _addListener(target, type, listener, prepend) {
   return target;
 }
 
+// 添加一个事件绑定，等同于on
 EventEmitter.prototype.addListener = function addListener(type, listener) {
   return _addListener(this, type, listener, false);
 };
 
+//参加addListener
 EventEmitter.prototype.on = EventEmitter.prototype.addListener;
 
-EventEmitter.prototype.prependListener =
-    function prependListener(type, listener) {
+
+EventEmitter.prototype.prependListener = function prependListener(type, listener) {
       return _addListener(this, type, listener, true);
-    };
+};
 
 function onceWrapper() {
   if (!this.fired) {
