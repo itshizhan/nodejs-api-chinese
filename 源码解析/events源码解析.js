@@ -1,4 +1,3 @@
-
 'use strict';
 
 var domain;
@@ -56,6 +55,8 @@ EventEmitter.init = function() {
     }
   }
 
+  // EventEmitter 实例化是，将 _events 初始化为 {}， _eventsCount = 0
+  // 这一步很重要，否则on()方法执行时 _events 为undefined
   if (!this._events || this._events === Object.getPrototypeOf(this)._events) {
     this._events = Object.create(null);
     this._eventsCount = 0;
@@ -163,7 +164,7 @@ EventEmitter.prototype.emit = function emit(type) {
   //如果参数是error，则是触发error事件
   var doError = (type === 'error');
 
-  // events 即当前的事件队列
+  // events 即当前的事件队列 {}
   events = this._events;
   // 继续处理doError
   if (events)
@@ -259,17 +260,21 @@ function _addListener(target, type, listener, prepend) {
   var m;
   var events;
   var existing;
-
+  // listener 必须是函数
   if (typeof listener !== 'function')
     throw new TypeError('"listener" argument must be a function');
 
-  events = target._events;
-  if (!events) {
+  //当前实例的事件队列{}, _events 是原型属性，默认是undefined， 在init 时初始化为{}
+  events = target._events; 
+  if (!events) {  
+    //如果false，创建一个空对象
+    //这一步感觉有点多余，因为实例化的时候，_events 已经初始化为 {}了，这里会执行吗？
     events = target._events = Object.create(null);
     target._eventsCount = 0;
   } else {
     // To avoid recursion in the case that type === "newListener"! Before
     // adding it to the listeners, first emit "newListener".
+    // 为了避免添加了 newListener 事件，产生递归，在添加事件监听器前，先触发一次 newListener 事件
     if (events.newListener) {
       target.emit('newListener', type,
                   listener.listener ? listener.listener : listener);
@@ -278,6 +283,7 @@ function _addListener(target, type, listener, prepend) {
       // this._events to be assigned to a new object
       events = target._events;
     }
+    // 将事件名 作为事件队列对象的key
     existing = events[type];
   }
 
@@ -300,6 +306,7 @@ function _addListener(target, type, listener, prepend) {
     }
 
     // Check for listener leak
+    // 为了防止内存泄漏，检查事件监听器是否超过最大值
     if (!existing.warned) {
       m = $getMaxListeners(target);
       if (m && m > 0 && existing.length > m) {
