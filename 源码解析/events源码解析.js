@@ -319,6 +319,7 @@ function _addListener(target, type, listener, prepend) {
         w.emitter = target;
         w.type = type;
         w.count = existing.length;
+        //process.emitWarning()方法用于发出定制的进程警告。v6.0新增的方法，可以通过process.on('warning'，listener）监听
         process.emitWarning(w);
       }
     }
