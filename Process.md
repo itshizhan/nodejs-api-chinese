@@ -16,7 +16,7 @@ The 'beforeExit' event is not emitted `for conditions` causing explicit terminat
 
 `beforeExit` 不会在进程显式终止时调用，如调用`process.exit` 或未捕获异常。
 
-The 'beforeExit' should not be used as an alternative to the 'exit' event unless the intention is to schedule additional work.
+The 'beforeExit' should not be used as an alternative to the 'exit' event unless the intention is to schedule additional work .
 
 
 `beforeExit` 事件不能作为`exit`事件的替代方案，除非是为了继续执行后续的程序。
