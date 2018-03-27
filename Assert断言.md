@@ -146,4 +146,28 @@ assert.deepStrictEqual({a:1}, {a:'1'});
 
 # assert.throws(block[, error][, message])
 
+# Caveats 警告
+
+对于下面的示例，建议使用ES2015 的Object.is() 进行比较：
+
+```js
+const a = 0;
+const b = -a;
+assert.notStrictEqual(a, b);
+// AssertionError: 0 !== -0
+// Strict Equality Comparison doesn't distinguish between -0 and +0...
+assert(!Object.is(a, b));
+// but Object.is() does!
+
+const str1 = 'foo';
+const str2 = 'foo';
+assert.strictEqual(str1 / 1, str2 / 1);
+// AssertionError: NaN === NaN
+// Strict Equality Comparison can't be used to check NaN...
+assert(Object.is(str1 / 1, str2 / 1));
+// but Object.is() can!
+```
+
+更多信息，可以参考：https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness
+
 
