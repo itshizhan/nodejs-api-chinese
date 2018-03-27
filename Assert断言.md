@@ -142,13 +142,86 @@ assert.deepStrictEqual({a:1}, {a:'1'});
 
 # assert.ok(value[, message])
 
+
 # assert.strictEqual(actual, expected[, message])
+使用严格相对运算符 == 比较 actual和expected 是否相对，不等时，可以给定消息提示。
+
+```js
+const assert = require('assert');
+
+assert.strictEqual(1, 2);
+// AssertionError: 1 === 2
+
+assert.strictEqual(1, 1);
+// OK
+
+assert.strictEqual(1, '1');
+// AssertionError: 1 === '1'
+```
+
+如果比较的值不严格相等，会抛出待遇message属性的AssertionError异常，并将message参数作为其值。如果message参数 没有指定，为展示默认的错误消息。
 
 # assert.throws(block[, error][, message])
+- block：函数
+- error：正则或函数
+- message：any
+
+断言 block 以抛出错误。
+
+error：可以是正则表达式，或任何有效的函数(自定义函数，箭头函数)
+message： 如果指定了此参数，当block 不抛出错误是，message参数会作为AssertionErro 的信息。
+
+```js
+// 构造函数
+assert.throws(
+  () => {
+    throw new Error('Wrong value');
+  },
+  Error
+);
+
+// 正则
+
+assert.throws(
+  () => {
+    throw new Error('Wrong value');
+  },
+  /value/
+)
+
+// 自定义错误函数
+
+assert.throws(
+  () => {
+    throw new Error('Wrong value');
+  },
+  function(err) {
+    if ((err instanceof Error) && /value/.test(err)) {
+      return true;
+    }
+  },
+  'unexpected error'
+);
+
+```
+
+
+> 注意(Note that): error参数不能是字符串，如果第二个参数是一个字符串会被认为忽略了error（error is assumed to be omitted), 同时error字符串会被作为message参数。这个可能会导致一些很容易忽视(easy-to-miss)的错误。
+
+```js
+// THIS IS A MISTAKE! DO NOT DO THIS!
+assert.throws(myFunction, 'missing foo', 'did not throw with expected message');
+
+// Do this instead.
+assert.throws(myFunction, /missing foo/, 'did not throw with expected message');
+```
+
+
+
 
 # Caveats 警告
 
-对于下面的示例，建议使用ES2015 的Object.is() 进行比较：
+对于下面的示例(同值为零samevaluezero)，建议使用ES2015 的Object.is() 进行比较：
 
 ```js
 const a = 0;
@@ -167,6 +240,9 @@ assert.strictEqual(str1 / 1, str2 / 1);
 assert(Object.is(str1 / 1, str2 / 1));
 // but Object.is() can!
 ```
+
+> Object.is() 是ES2015 的概念，为了解决同值相等（Same-value equality）的问题，相当于 === ，区别是：`Object.is(0，-0)` 为 false，`Object.is(NaN，NaN)` 为true
+
 
 更多信息，可以参考：https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness
 
