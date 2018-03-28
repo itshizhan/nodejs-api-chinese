@@ -126,25 +126,75 @@ assert.deepStrictEqual({a:1}, {a:'1'});
 
 # assert.doesNotThrow(block[, error][, message])
 
+
 # assert.equal(actual, expected[, message])
+
 
 # assert.fail(actual, expected, message, operator)
 
+
 # assert.ifError(value)
+
 
 # assert.notDeepEqual(actual, expected[, message])
 
+
 # assert.notDeepStrictEqual(actual, expected[, message])
+
+
 
 # assert.notEqual(actual, expected[, message])
 
+- actual <any>
+- expected <any>
+- message <any>
+
+
+断言不相等（shallow, coercive inequality ），使用Abstract Equality Comparison ( != )
+
+```js
+const assert = require('assert');
+
+assert.notEqual(1, 2);
+// OK
+
+assert.notEqual(1, 1);
+// AssertionError: 1 != 1
+
+assert.notEqual(1, '1');
+// AssertionError: 1 != '1'
+```
+
+
+如果value 和 expected 相等，会抛出带有message属性的AssertionError异常，并将message参数作为其值。如果message参数 没有指定，为展示默认的错误消息。
+
 # assert.notStrictEqual(actual, expected[, message])
 
+- actual <any>
+- expected <any>
+- message <any>
 
+断言不严格相等,使用 Strict Equality Comparison `！==`
+
+```js
+const assert = require('assert');
+
+assert.notStrictEqual(1, 2);
+// OK
+
+assert.notStrictEqual(1, 1);
+// AssertionError: 1 !== 1
+
+assert.notStrictEqual(1, '1');
+// OK
+```
 
 # assert.ok(value[, message])
 
 断言value 是否为true值(truely),等同于 `assert.equal(!!value, true, message).`
+
+
+如果value 不为true或转为true (truely),会抛出带有message属性的AssertionError异常，并将message参数作为其值。如果message参数 没有指定，为展示默认的错误消息。
 
 ```js
 
@@ -180,7 +230,7 @@ assert.strictEqual(1, '1');
 // AssertionError: 1 === '1'
 ```
 
-如果比较的值不严格相等，会抛出待遇message属性的AssertionError异常，并将message参数作为其值。如果message参数 没有指定，为展示默认的错误消息。
+如果比较的值不严格相等，会抛出带有message属性的AssertionError异常，并将message参数作为其值。如果message参数 没有指定，为展示默认的错误消息。
 
 # assert.throws(block[, error][, message])
 - block：函数
