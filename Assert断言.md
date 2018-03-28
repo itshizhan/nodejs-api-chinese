@@ -140,7 +140,28 @@ assert.deepStrictEqual({a:1}, {a:'1'});
 
 # assert.notStrictEqual(actual, expected[, message])
 
+
+
 # assert.ok(value[, message])
+
+断言value 是否为true值(truely),等同于 `assert.equal(!!value, true, message).`
+
+```js
+
+const assert = require('assert');
+
+assert.ok(true);
+// OK
+assert.ok(1);
+// OK
+assert.ok(false);
+// throws "AssertionError: false == true"
+assert.ok(0);
+// throws "AssertionError: 0 == true"
+assert.ok(false, 'it\'s false');
+// throws "AssertionError: it's false"
+
+```
 
 
 # assert.strictEqual(actual, expected[, message])
