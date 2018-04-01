@@ -231,8 +231,7 @@ assert.equal({ a: { b: 1 } }, { a: { b: 1 } });
 - operator <string> 默认值: '!='
 - stackStartFunction <function>  默认值: assert.fail
 
-
-Throws an AssertionError. If message is falsy, the error message is set as the values of actual and expected separated by the provided operator. If just the two actual and expected arguments are provided, operator will default to '!='. If message is provided only it will be used as the error message, the other arguments will be stored as properties on the thrown object. If stackStartFunction is provided, all stack frames above that function will be removed from stacktrace (see Error.captureStackTrace).
+抛出AssertionError。 如果message为假(falsy),则error 信息为：由operator分割的values 和expected 的值。 如果actual 和 expected参数都提供了，则operator 默认值为`!=`。 如果只（only??）提供了message参数，message参数会作为error消息，其他的参数则会保存在thrown对象的属性中。如果提供了stackStartFunction参数，则该函数上的所有栈帧（all stack frames）都会从栈跟踪中移除（详见: `Error.captureStackTrace`）。
 
 ```js
 const assert = require('assert');
@@ -277,12 +276,95 @@ suppressFrame();
 
 # assert.ifError(value)
 
+- value <any>
+
+Throws value if value is truthy. This is useful when testing the error argument in callbacks.
+
+如果值为真(truthy),则抛出值value。 这对于测试回调函数中的error参数特别有用。
+
+
+
+```js
+const assert = require('assert');
+
+assert.ifError(null);
+// OK
+assert.ifError(0);
+// OK
+assert.ifError(1);
+// Throws 1
+assert.ifError('error');
+// Throws 'error'
+assert.ifError(new Error());
+// Throws Error
+```
+
 
 # assert.notDeepEqual(actual, expected[, message])
+
+- actual <any>
+- expected <any>
+- message <any>
+
+
+断言不深度相等，与`assert.deepEqual()` 相反。
+
+```js
+const assert = require('assert');
+
+const obj1 = {
+  a: {
+    b: 1
+  }
+};
+const obj2 = {
+  a: {
+    b: 2
+  }
+};
+const obj3 = {
+  a: {
+    b: 1
+  }
+};
+const obj4 = Object.create(obj1);
+
+assert.notDeepEqual(obj1, obj1);
+// AssertionError: { a: { b: 1 } } notDeepEqual { a: { b: 1 } }
+
+assert.notDeepEqual(obj1, obj2);
+// OK: obj1 and obj2 are not deeply equal
+
+assert.notDeepEqual(obj1, obj3);
+// AssertionError: { a: { b: 1 } } notDeepEqual { a: { b: 1 } }
+
+assert.notDeepEqual(obj1, obj4);
+// OK: obj1 and obj4 are not deeply equal
+```
+
+如果值深度相等，会抛出带有message属性的AssertionError异常，并将message参数作为其值。如果message参数 没有指定，为展示默认的错误消息。
 
 
 # assert.notDeepStrictEqual(actual, expected[, message])
 
+- actual <any>
+- expected <any>
+- message <any>
+
+断言严格不相等，与`assert.deepStrictEqual()`相反
+
+```js
+const assert = require('assert');
+
+assert.notDeepEqual({ a: 1 }, { a: '1' });
+// AssertionError: { a: 1 } notDeepEqual { a: '1' }
+
+assert.notDeepStrictEqual({ a: 1 }, { a: '1' });
+// OK
+```
+
+
+如果值深度和严格相等，会抛出带有message属性的AssertionError异常，并将message参数作为其值。如果message参数 没有指定，为展示默认的错误消息。
 
 
 # assert.notEqual(actual, expected[, message])
