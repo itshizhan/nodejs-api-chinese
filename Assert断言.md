@@ -41,11 +41,8 @@ assert.ok(false, 'it\'s false');
 注：一旦assert断言为false，则程序抛出错误，终止继续执行。
 
 
- 
  # assert.deepEqual(actual, expected[, message])
  
-
-
 Version | Changes
 ---|---
 v6.4.0, v4.7.1| Typed array slices are handled correctly now.
@@ -116,21 +113,166 @@ assert.deepEqual(obj1, obj4);
 ```js
 const assert = require('assert');
 
-assert.deepEqual({a:1}, {a:'1'});
+assert.deepEqual({ a: 1 }, { a: '1' });
 // OK, because 1 == '1'
 
-assert.deepStrictEqual({a:1}, {a:'1'});
+assert.deepStrictEqual({ a: 1 }, { a: '1' });
 // AssertionError: { a: 1 } deepStrictEqual { a: '1' }
 // because 1 !== '1' using strict equality
+
+// The following objects don't have own properties
+const date = new Date();
+const object = {};
+const fakeDate = {};
+
+Object.setPrototypeOf(fakeDate, Date.prototype);
+
+assert.deepEqual(object, fakeDate);
+// OK, doesn't check [[Prototype]]
+assert.deepStrictEqual(object, fakeDate);
+// AssertionError: {} deepStrictEqual Date {}
+// Different [[Prototype]]
+
+assert.deepEqual(date, fakeDate);
+// OK, doesn't check type tags
+assert.deepStrictEqual(date, fakeDate);
+// AssertionError: 2017-03-11T14:25:31.849Z deepStrictEqual Date {}
+// Different type tags
+
+assert.deepStrictEqual(new Number(1), new Number(2));
+// Fails because the wrapped number is unwrapped and compared as well.
+assert.deepStrictEqual(new String('foo'), Object('foo'));
+// OK because the object and the string are identical when unwrapped.
+
 ```
 
 # assert.doesNotThrow(block[, error][, message])
 
+- block <Function>
+- error <RegExp> | <Function>
+- message <any>
+
+断言 block 函数不会抛出错误。 具体详情见： `assert.throws() `
+
+当`assert.doesNotThrow()` 方法调用时，block 函数会立即执行。
+
+如果抛出了错误，且和error参数指定的错误类型相同，则抛出 `AssertionError` , 如果错误类型不相同，或者error参数为`undefined`, 则错误会回传到（is propagated back）调用的函数中。
+
+下面的示例，将会抛出`TypeError`, 因为断言中的错误类型不匹配：
+
+```js
+assert.doesNotThrow(
+  () => {
+    throw new TypeError('Wrong value');
+  },
+  SyntaxError
+);
+//TypeError: Wrong value
+```
+
+然而， 以下示例会在AssertionError中抛出一个带有`Got unwanted exception (TypeError)..`消息：
+
+```js
+assert.doesNotThrow(
+  () => {
+    throw new TypeError('Wrong value');
+  },
+  TypeError
+);
+//AssertionError [ERR_ASSERTION]: Got unwanted exception.
+```
+
+
+如果AssertionError 抛出，且提供了message 参数，则message参数的值会附加到AssertionError 消息中：
+
+```js
+assert.doesNotThrow(
+  () => {
+    throw new TypeError('Wrong value');
+  },
+  TypeError,
+  'Whoops'
+);
+// Throws: AssertionError: Got unwanted exception (TypeError). Whoops
+// AssertionError [ERR_ASSERTION]: Got unwanted exception: Whoops
+```
 
 # assert.equal(actual, expected[, message])
 
+- actual <any>
+- expected <any>
+- message <any>
 
-# assert.fail(actual, expected, message, operator)
+断言相等（shallow, coercive equality ），使用Abstract Equality Comparison ( == )
+
+```js
+const assert = require('assert');
+
+assert.equal(1, 1);
+// OK, 1 == 1
+assert.equal(1, '1');
+// OK, 1 == '1'
+
+assert.equal(1, 2);
+// AssertionError: 1 == 2
+assert.equal({ a: { b: 1 } }, { a: { b: 1 } });
+//AssertionError: { a: { b: 1 } } == { a: { b: 1 } }
+```
+
+如果值不相等，会抛出带有message属性的AssertionError异常，并将message参数作为其值。如果message参数 没有指定，为展示默认的错误消息。
+
+
+# assert.fail(message)#
+# assert.fail(actual, expected[, message[, operator[, stackStartFunction]]])
+
+- actual <any>
+- expected <any>
+- message <any>
+- operator <string> 默认值: '!='
+- stackStartFunction <function>  默认值: assert.fail
+
+
+Throws an AssertionError. If message is falsy, the error message is set as the values of actual and expected separated by the provided operator. If just the two actual and expected arguments are provided, operator will default to '!='. If message is provided only it will be used as the error message, the other arguments will be stored as properties on the thrown object. If stackStartFunction is provided, all stack frames above that function will be removed from stacktrace (see Error.captureStackTrace).
+
+```js
+const assert = require('assert');
+
+assert.fail(1, 2, undefined, '>');
+// AssertionError [ERR_ASSERTION]: 1 > 2
+
+assert.fail(1, 2, 'fail');
+// AssertionError [ERR_ASSERTION]: fail
+
+assert.fail(1, 2, 'whoops', '>');
+// AssertionError [ERR_ASSERTION]: whoops
+```
+
+Note: In the last two cases actual, expected, and operator have no influence on the error message.
+
+```js
+assert.fail();
+// AssertionError [ERR_ASSERTION]: Failed
+
+assert.fail('boom');
+// AssertionError [ERR_ASSERTION]: boom
+
+assert.fail('a', 'b');
+// AssertionError [ERR_ASSERTION]: 'a' != 'b'
+```
+
+Example use of stackStartFunction for truncating the exception's stacktrace:
+
+
+```js
+function suppressFrame() {
+  assert.fail('a', 'b', undefined, '!==', suppressFrame);
+}
+suppressFrame();
+// AssertionError [ERR_ASSERTION]: 'a' !== 'b'
+//     at repl:1:1
+//     at ContextifyScript.Script.runInThisContext (vm.js:44:33)
+//     ...
+```
 
 
 # assert.ifError(value)
