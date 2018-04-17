@@ -12,11 +12,28 @@ process 对象是 `EventEmitter` 的实例
 
 此事件的回调函数，调用时会传递 `proces.exitCode` 作为唯一参数。
 
-The 'beforeExit' event is not emitted `for conditions` causing explicit termination, such as calling process.exit() or uncaught exceptions.
 
 `beforeExit` 不会在进程显式终止时调用，如调用`process.exit` 或未捕获异常。
 
-The 'beforeExit' should not be used as an alternative to the 'exit' event unless the intention is to schedule additional work .
-
-
 `beforeExit` 事件不能作为`exit`事件的替代方案，除非是为了继续执行后续的程序。
+
+## Event: 'disconnect'
+
+如果nodejs 进程是由IPC通道(IPC channel)创建的(is spawned with)， (see the Child Process and Cluster documentation) ,则当IPC通道关闭时，会触发`disconnect`事件。
+
+## Event: 'exit'
+
+
+## Event: 'message'
+
+## Event: 'rejectionHandled'
+
+## Event: 'uncaughtException'
+
+### Warning: Using 'uncaughtException' correctly
+
+## Event: 'unhandledRejection'
+
+## Event: 'warning'
+
+## Signal Events
